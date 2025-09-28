@@ -1,0 +1,307 @@
+openapi: 3.0.3
+info:
+  title: TODO App API
+  description: REST API for managing personal TODO tasks
+  version: 1.0.0
+  contact:
+    name: TODO App
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Development server
+
+paths:
+  /tasks:
+    get:
+      summary: Get all tasks
+      description: Retrieve all tasks ordered by creation date (newest first)
+      operationId: getTasks
+      parameters:
+        - name: completed
+          in: query
+          description: Filter by completion status
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  count:
+                    type: integer
+                    description: Total number of tasks
+              examples:
+                all_tasks:
+                  summary: All tasks
+                  value:
+                    tasks:
+                      - id: 1
+                        title: "Buy groceries"
+                        completed: false
+                        created_at: "2025-09-27T10:00:00Z"
+                        updated_at: "2025-09-27T10:00:00Z"
+                      - id: 2
+                        title: "Walk the dog"
+                        completed: true
+                        created_at: "2025-09-27T09:00:00Z"
+                        updated_at: "2025-09-27T11:00:00Z"
+                    count: 2
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Create a new task
+      description: Create a new task with the provided title
+      operationId: createTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+            examples:
+              new_task:
+                summary: Create new task
+                value:
+                  title: "Complete project documentation"
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+              examples:
+                created_task:
+                  summary: Created task
+                  value:
+                    id: 3
+                    title: "Complete project documentation"
+                    completed: false
+                    created_at: "2025-09-27T12:00:00Z"
+                    updated_at: "2025-09-27T12:00:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks/{id}:
+    get:
+      summary: Get a specific task
+      description: Retrieve a task by its ID
+      operationId: getTask
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      summary: Update a task
+      description: Update a task's title and/or completion status
+      operationId: updateTask
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+            examples:
+              update_title:
+                summary: Update task title
+                value:
+                  title: "Buy groceries and cook dinner"
+              toggle_completion:
+                summary: Mark task as completed
+                value:
+                  completed: true
+              full_update:
+                summary: Update both title and status
+                value:
+                  title: "Updated task title"
+                  completed: true
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Delete a task
+      description: Permanently delete a task
+      operationId: deleteTask
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '204':
+          description: Task deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    Task:
+      type: object
+      required:
+        - id
+        - title
+        - completed
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          description: Unique task identifier
+          example: 1
+        title:
+          type: string
+          description: Task description
+          maxLength: 500
+          minLength: 1
+          example: "Buy groceries"
+        completed:
+          type: boolean
+          description: Task completion status
+          example: false
+        created_at:
+          type: string
+          format: date-time
+          description: Task creation timestamp (ISO 8601)
+          example: "2025-09-27T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Task last update timestamp (ISO 8601)
+          example: "2025-09-27T10:00:00Z"
+
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: Task description
+          maxLength: 500
+          minLength: 1
+          example: "Complete project documentation"
+
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Updated task description
+          maxLength: 500
+          minLength: 1
+          example: "Updated task title"
+        completed:
+          type: boolean
+          description: Updated completion status
+          example: true
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "validation_error"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Task title cannot be empty"
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            empty_title:
+              summary: Empty title error
+              value:
+                error: "validation_error"
+                message: "Task title cannot be empty"
+            title_too_long:
+              summary: Title too long error
+              value:
+                error: "validation_error"
+                message: "Task title must be 500 characters or less"
+
+    NotFound:
+      description: Task not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            task_not_found:
+              summary: Task not found
+              value:
+                error: "not_found"
+                message: "Task with ID 999 not found"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            server_error:
+              summary: Internal server error
+              value:
+                error: "internal_error"
+                message: "An unexpected error occurred"

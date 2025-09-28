@@ -1,0 +1,108 @@
+openapi: 3.0.3
+info:
+  title: TODO App Health API
+  description: Enhanced health endpoint for TODO application monitoring
+  version: 1.0.0
+  contact:
+    name: TODO App API
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /health:
+    get:
+      summary: Get service health status
+      description: Returns comprehensive health information including database connectivity
+      operationId: getHealth
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "healthy"
+                database: "connected"
+                timestamp: "2025-09-27T10:30:00Z"
+                version: "1.0.0"
+                uptime: 3600
+        '503':
+          description: Service is degraded or unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "degraded"
+                database: "disconnected"
+                timestamp: "2025-09-27T10:30:00Z"
+                version: "1.0.0"
+                uptime: 3600
+        '500':
+          description: Internal server error during health check
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "internal_error"
+                message: "Health check failed unexpectedly"
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - database
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall service health status
+        database:
+          type: string
+          enum: [connected, disconnected, error]
+          description: Database connectivity status
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when health check was performed
+        version:
+          type: string
+          description: Application version identifier
+          example: "1.0.0"
+        uptime:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Service uptime in seconds
+          example: 3600
+      example:
+        status: "healthy"
+        database: "connected"
+        timestamp: "2025-09-27T10:30:00Z"
+        version: "1.0.0"
+        uptime: 3600
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code identifier
+        message:
+          type: string
+          description: Human-readable error message
+      example:
+        error: "internal_error"
+        message: "Health check failed unexpectedly"

@@ -1,0 +1,119 @@
+.task-form {
+  max-width: 600px;
+  margin: 0 auto 30px auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.task-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-form-input-group {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.task-form-input {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-form-input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.task-form-input.error {
+  border-color: #e74c3c;
+}
+
+.task-form-input.error:focus {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+.task-form-input:disabled {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+}
+
+.task-form-submit {
+  padding: 12px 24px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.task-form-submit:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.task-form-submit:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.task-form-error {
+  padding: 10px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  margin-top: -4px;
+}
+
+.task-form-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-top: -4px;
+}
+
+.character-count {
+  font-weight: 500;
+}
+
+.hint {
+  font-style: italic;
+}
+
+@media (max-width: 600px) {
+  .task-form {
+    margin: 0 10px 20px 10px;
+    padding: 15px;
+  }
+
+  .task-form-input-group {
+    flex-direction: column;
+  }
+
+  .task-form-submit {
+    width: 100%;
+  }
+
+  .task-form-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
