@@ -35,40 +35,40 @@
 ## Phase 3.1: Setup & Prerequisites
 - [x] T001 Create DDD directory structure in backend/ per implementation plan
 - [x] T002 Initialize Go modules for layered architecture with proper dependencies
-- [ ] T003 [P] Configure golangci-lint with DDD-specific rules and formatting
-- [ ] T004 [P] Create backup of existing implementation for rollback capability
+- [x] T003 [P] Configure golangci-lint with DDD-specific rules and formatting
+- [x] T004 [P] Create backup of existing implementation for rollback capability
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
 
 ### Contract Tests for Task API
-- [ ] T005 [P] Contract test GET /api/v1/tasks in backend/tests/contract/tasks_get_test.go
-- [ ] T006 [P] Contract test POST /api/v1/tasks in backend/tests/contract/tasks_post_test.go
-- [ ] T007 [P] Contract test GET /api/v1/tasks/{id} in backend/tests/contract/tasks_get_by_id_test.go
-- [ ] T008 [P] Contract test PUT /api/v1/tasks/{id} in backend/tests/contract/tasks_put_test.go
-- [ ] T009 [P] Contract test DELETE /api/v1/tasks/{id} in backend/tests/contract/tasks_delete_test.go
+- [x] T005 [P] Contract test GET /api/v1/tasks in backend/tests/contract/tasks_get_test.go
+- [x] T006 [P] Contract test POST /api/v1/tasks in backend/tests/contract/tasks_post_test.go
+- [x] T007 [P] Contract test GET /api/v1/tasks/{id} in backend/tests/contract/tasks_get_by_id_test.go
+- [x] T008 [P] Contract test PUT /api/v1/tasks/{id} in backend/tests/contract/tasks_put_update_test.go
+- [x] T009 [P] Contract test DELETE /api/v1/tasks/{id} in backend/tests/contract/tasks_delete_new_test.go
 
 ### Contract Tests for User API
-- [ ] T010 [P] Contract test POST /api/v1/users/register in backend/tests/contract/users_register_test.go
-- [ ] T011 [P] Contract test GET /api/v1/users/profile in backend/tests/contract/users_profile_get_test.go
-- [ ] T012 [P] Contract test PUT /api/v1/users/profile in backend/tests/contract/users_profile_put_test.go
-- [ ] T013 [P] Contract test GET /api/v1/users/preferences in backend/tests/contract/users_preferences_get_test.go
-- [ ] T014 [P] Contract test PUT /api/v1/users/preferences in backend/tests/contract/users_preferences_put_test.go
+- [x] T010 [P] Contract test POST /api/v1/users/register in backend/tests/contract/users_register_test.go
+- [x] T011 [P] Contract test GET /api/v1/users/profile in backend/tests/contract/users_profile_test.go
+- [x] T012 [P] Contract test PUT /api/v1/users/profile in backend/tests/contract/users_profile_test.go
+- [x] T013 [P] Contract test GET /api/v1/users/preferences in backend/tests/contract/users_preferences_test.go
+- [x] T014 [P] Contract test PUT /api/v1/users/preferences in backend/tests/contract/users_preferences_test.go
 
 ### Domain Tests
-- [ ] T015 [P] Unit tests for Task entity behavior in backend/domain/task/entities/task_test.go
-- [ ] T016 [P] Unit tests for User entity behavior in backend/domain/user/entities/user_test.go
-- [ ] T017 [P] Unit tests for TaskTitle value object in backend/domain/task/valueobjects/task_title_test.go
-- [ ] T018 [P] Unit tests for Email value object in backend/domain/user/valueobjects/email_test.go
+- [x] T015 [P] Unit tests for Task entity behavior in backend/domain/task/entities/task_test.go
+- [x] T016 [P] Unit tests for User entity behavior in backend/domain/user/entities/user_test.go
+- [x] T017 [P] Unit tests for TaskTitle value object in backend/domain/task/valueobjects/task_title_test.go
+- [x] T018 [P] Unit tests for Email value object in backend/domain/user/valueobjects/email_test.go
 
 ## Phase 3.3: Domain Layer (ONLY after tests are failing)
 
 ### Task Management Domain
-- [ ] T019 [P] TaskID value object in backend/domain/task/valueobjects/task_id.go
-- [ ] T020 [P] TaskTitle value object in backend/domain/task/valueobjects/task_title.go
-- [ ] T021 [P] TaskDescription value object in backend/domain/task/valueobjects/task_description.go
-- [ ] T022 [P] TaskStatus value object in backend/domain/task/valueobjects/task_status.go
-- [ ] T023 [P] TaskPriority value object in backend/domain/task/valueobjects/task_priority.go
+- [x] T019 [P] TaskID value object in backend/domain/task/valueobjects/task_id.go
+- [x] T020 [P] TaskTitle value object in backend/domain/task/valueobjects/task_title.go
+- [x] T021 [P] TaskDescription value object in backend/domain/task/valueobjects/task_description.go
+- [x] T022 [P] TaskStatus value object in backend/domain/task/valueobjects/task_status.go
+- [x] T023 [P] TaskPriority value object in backend/domain/task/valueobjects/task_priority.go
 - [ ] T024 Task entity with behavior methods in backend/domain/task/entities/task.go
 - [ ] T025 TaskRepository interface in backend/domain/task/repositories/task_repository.go
 - [ ] T026 [P] TaskValidationService in backend/domain/task/services/task_validation_service.go
