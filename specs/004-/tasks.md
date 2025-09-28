@@ -69,39 +69,39 @@
 - [x] T021 [P] TaskDescription value object in backend/domain/task/valueobjects/task_description.go
 - [x] T022 [P] TaskStatus value object in backend/domain/task/valueobjects/task_status.go
 - [x] T023 [P] TaskPriority value object in backend/domain/task/valueobjects/task_priority.go
-- [ ] T024 Task entity with behavior methods in backend/domain/task/entities/task.go
-- [ ] T025 TaskRepository interface in backend/domain/task/repositories/task_repository.go
-- [ ] T026 [P] TaskValidationService in backend/domain/task/services/task_validation_service.go
-- [ ] T027 [P] TaskSearchService in backend/domain/task/services/task_search_service.go
+- [x] T024 Task entity with behavior methods in backend/domain/task/entities/task.go
+- [x] T025 TaskRepository interface in backend/domain/task/repositories/task_repository.go
+- [x] T026 [P] TaskValidationService in backend/domain/task/services/task_validation_service.go
+- [x] T027 [P] TaskSearchService in backend/domain/task/services/task_search_service.go
 
 ### User Management Domain
-- [ ] T028 [P] UserID value object in backend/domain/user/valueobjects/user_id.go
-- [ ] T029 [P] Email value object in backend/domain/user/valueobjects/email.go
-- [ ] T030 [P] UserProfile value object in backend/domain/user/valueobjects/user_profile.go
-- [ ] T031 [P] UserPreferences value object in backend/domain/user/valueobjects/user_preferences.go
-- [ ] T032 User entity with behavior methods in backend/domain/user/entities/user.go
-- [ ] T033 UserRepository interface in backend/domain/user/repositories/user_repository.go
-- [ ] T034 [P] UserAuthenticationService in backend/domain/user/services/user_authentication_service.go
-- [ ] T035 [P] UserProfileService in backend/domain/user/services/user_profile_service.go
+- [x] T028 [P] UserID value object in backend/domain/user/valueobjects/user_id.go
+- [x] T029 [P] Email value object in backend/domain/user/valueobjects/email.go
+- [x] T030 [P] UserProfile value object in backend/domain/user/valueobjects/user_profile.go
+- [x] T031 [P] UserPreferences value object in backend/domain/user/valueobjects/user_preferences.go
+- [x] T032 User entity with behavior methods in backend/domain/user/entities/user.go
+- [x] T033 UserRepository interface in backend/domain/user/repositories/user_repository.go
+- [x] T034 [P] UserAuthenticationService in backend/domain/user/services/user_authentication_service.go
+- [x] T035 [P] UserProfileService in backend/domain/user/services/user_profile_service.go
 
 ## Phase 3.4: Application Layer
 
 ### Application Services
-- [ ] T036 Task application service in backend/application/task/task_application_service.go
-- [ ] T037 User application service in backend/application/user/user_application_service.go
+- [x] T036 Task application service in backend/application/task/task_application_service.go
+- [x] T037 User application service in backend/application/user/user_application_service.go
 
 ## Phase 3.5: Infrastructure Layer
 
 ### Repository Implementations
-- [ ] T038 GORM TaskRepository implementation in backend/infrastructure/persistence/gorm_task_repository.go
-- [ ] T039 GORM UserRepository implementation in backend/infrastructure/persistence/gorm_user_repository.go
-- [ ] T040 Database migration scripts in backend/infrastructure/persistence/migrations/
+- [x] T038 GORM TaskRepository implementation in backend/infrastructure/persistence/gorm_task_repository.go
+- [x] T039 GORM UserRepository implementation in backend/infrastructure/persistence/gorm_user_repository.go
+- [x] T040 Database migration scripts in backend/infrastructure/persistence/migrations/
 
 ## Phase 3.6: Presentation Layer
 
 ### HTTP Handlers
-- [ ] T041 Task HTTP handlers in backend/presentation/http/task_handlers.go
-- [ ] T042 User HTTP handlers in backend/presentation/http/user_handlers.go
+- [x] T041 Task HTTP handlers in backend/presentation/http/task_handlers.go
+- [x] T042 User HTTP handlers in backend/presentation/http/user_handlers.go
 
 ## Dependencies
 **Critical Path: Domain → Application → Infrastructure → Presentation**
