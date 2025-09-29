@@ -1,0 +1,62 @@
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters-settings:
+  depguard:
+    rules:
+      domain:
+        files:
+          - "domain/**/*.go"
+        deny:
+          - pkg: "gorm.io/gorm"
+            desc: "Domain layer must not import GORM"
+          - pkg: "github.com/gin-gonic/gin"
+            desc: "Domain layer must not import Gin"
+          - pkg: "todo-app/infrastructure"
+            desc: "Domain layer cannot depend on infrastructure"
+          - pkg: "todo-app/application"
+            desc: "Domain layer cannot depend on application"
+          - pkg: "todo-app/presentation"
+            desc: "Domain layer cannot depend on presentation"
+      application:
+        files:
+          - "application/**/*.go"
+        deny:
+          - pkg: "gorm.io/gorm"
+            desc: "Application layer must not import GORM directly"
+          - pkg: "github.com/gin-gonic/gin"
+            desc: "Application layer must not import Gin"
+          - pkg: "todo-app/infrastructure"
+            desc: "Application layer cannot depend on infrastructure"
+          - pkg: "todo-app/presentation"
+            desc: "Application layer cannot depend on presentation"
+
+  gocyclo:
+    min-complexity: 10
+
+  govet:
+    check-shadowing: true
+
+  misspell:
+    locale: US
+
+linters:
+  enable:
+    - depguard      # Enforce import restrictions for DDD layers
+    - gocyclo       # Complexity analysis
+    - govet         # Vet examination
+    - ineffassign   # Detect ineffectual assignments
+    - misspell      # Misspelled English words
+    - staticcheck   # Static analysis
+    - unused        # Unused code detection
+    - gosimple      # Simplification suggestions
+    - gocritic      # Comprehensive code critique
+
+issues:
+  exclude-rules:
+    # Exclude certain linters for test files
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - gocritic
