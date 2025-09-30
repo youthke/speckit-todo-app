@@ -3,6 +3,7 @@
  * These tests verify the component-related TypeScript type definitions work as expected
  */
 
+import { vi } from 'vitest';
 import {
   TaskFormProps,
   TaskItemProps,
@@ -60,7 +61,7 @@ describe('Component Props Contract', () => {
   });
 
   it('should define TaskItemProps interface correctly', () => {
-    const mockOnTaskChange = jest.fn();
+    const mockOnTaskChange = vi.fn();
 
     const props: TaskItemProps = {
       task: mockTask,
@@ -76,7 +77,7 @@ describe('Component Props Contract', () => {
   });
 
   it('should define TaskListProps interface correctly', () => {
-    const mockOnTaskChange = jest.fn();
+    const mockOnTaskChange = vi.fn();
 
     const propsShowCompleted: TaskListProps = {
       showCompleted: true,
@@ -218,7 +219,7 @@ describe('Event Handler Types Contract', () => {
     // Test handlers
     mockTaskChangeHandler();
     mockTaskCreatedHandler(mockTask);
-    mockFormSubmitHandler({ preventDefault: jest.fn() } as any);
+    mockFormSubmitHandler({ preventDefault: vi.fn() } as any);
     mockInputChangeHandler({ target: { value: 'test' } } as any);
     mockButtonClickHandler({} as any);
   });

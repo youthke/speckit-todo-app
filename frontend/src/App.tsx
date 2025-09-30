@@ -1,105 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import TaskForm from './components/TaskForm/TaskForm';
-import TaskList from './components/TaskList/TaskList';
-import { checkHealth } from './services/api';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './providers/AuthProvider';
+import ProtectedRoute from './components/routes/ProtectedRoute';
+import MainLayout from './components/layout/MainLayout';
+import Login from './pages/Login';
+import AuthCallback from './pages/AuthCallback';
+import Dashboard from './pages/Dashboard';
+import TodoListPage from './pages/TodoList';
+import Profile from './pages/Profile';
+import NotFound from './pages/NotFound';
+import { ROUTES } from './routes/routeConfig';
 import './App.css';
 
 function App() {
-  const [filter, setFilter] = useState('all'); // 'all', 'pending', 'completed'
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [serverStatus, setServerStatus] = useState('checking');
-
-  // Check server connection on app load
-  useEffect(() => {
-    const checkServerConnection = async () => {
-      try {
-        await checkHealth();
-        setServerStatus('connected');
-      } catch (error) {
-        setServerStatus('disconnected');
-        console.error('Server connection failed:', error);
-      }
-    };
-
-    checkServerConnection();
-  }, []);
-
-  const handleTaskChange = () => {
-    // Force re-render of task list by updating refresh key
-    setRefreshKey(prev => prev + 1);
-  };
-
-  const getFilterValue = () => {
-    if (filter === 'pending') return false;
-    if (filter === 'completed') return true;
-    return undefined; // 'all'
-  };
-
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>TODO App</h1>
-        <div className="server-status">
-          <span className={`status-indicator ${serverStatus}`}>
-            {serverStatus === 'checking' && '🔄 Checking server...'}
-            {serverStatus === 'connected' && '✅ Connected'}
-            {serverStatus === 'disconnected' && '❌ Server unavailable'}
-          </span>
-        </div>
-      </header>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Root redirect */}
+          <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />
 
-      <main className="App-main">
-        {serverStatus === 'disconnected' && (
-          <div className="server-error">
-            <h2>Server Connection Error</h2>
-            <p>Cannot connect to the TODO server. Please ensure the backend server is running on port 8080.</p>
-            <button onClick={() => window.location.reload()} className="retry-button">
-              Retry Connection
-            </button>
-          </div>
-        )}
+          {/* Public routes */}
+          <Route path={ROUTES.LOGIN} element={<Login />} />
+          <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
 
-        {serverStatus === 'connected' && (
-          <>
-            <TaskForm onTaskCreated={handleTaskChange} />
+          {/* Protected routes with layout */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<MainLayout />}>
+              <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
+              <Route path={ROUTES.TASKS} element={<TodoListPage />} />
+              <Route path={ROUTES.PROFILE} element={<Profile />} />
+            </Route>
+          </Route>
 
-            <div className="filter-section">
-              <h2>Filter Tasks</h2>
-              <div className="filter-buttons">
-                <button
-                  className={filter === 'all' ? 'active' : ''}
-                  onClick={() => setFilter('all')}
-                >
-                  All Tasks
-                </button>
-                <button
-                  className={filter === 'pending' ? 'active' : ''}
-                  onClick={() => setFilter('pending')}
-                >
-                  Pending
-                </button>
-                <button
-                  className={filter === 'completed' ? 'active' : ''}
-                  onClick={() => setFilter('completed')}
-                >
-                  Completed
-                </button>
-              </div>
-            </div>
-
-            <TaskList
-              key={refreshKey}
-              showCompleted={getFilterValue()}
-              onTaskChange={handleTaskChange}
-            />
-          </>
-        )}
-      </main>
-
-      <footer className="App-footer">
-        <p>TODO App - Built with React and Go</p>
-      </footer>
-    </div>
+          {/* 404 catch-all */}
+          <Route path={ROUTES.NOT_FOUND} element={<NotFound />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
