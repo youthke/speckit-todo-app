@@ -10,6 +10,8 @@ Auto-generated from all feature plans. Last updated: 2025-09-27
 - N/A (frontend-only migration) (003-frontend-typescript)
 - Go 1.23+ + Gin web framework, GORM ORM, testify testing framework (004-)
 - SQLite database (development), existing schema to be migrated (004-)
+- Go 1.23+, React 19.1.1 with TypeScript 5.x + Gin web framework, GORM ORM, Google OAuth 2.0 libraries (005-google)
+- SQLite (development), existing database schema (005-google)
 
 ## Project Structure
 ```
@@ -25,9 +27,9 @@ tests/
 Go 1.21+, Node.js 18+: Follow standard conventions
 
 ## Recent Changes
+- 005-google: Added Go 1.23+, React 19.1.1 with TypeScript 5.x + Gin web framework, GORM ORM, Google OAuth 2.0 libraries
 - 004-: Added Go 1.23+ + Gin web framework, GORM ORM, testify testing framework
 - 003-frontend-typescript: Added TypeScript 5.x (migration from JavaScript ES6+) + React 19.1.1, React Scripts 5.0.1, Testing Library, Axios
-- 002-api-health: Added Go 1.23+ + Gin web framework, GORM ORM, SQLite database
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

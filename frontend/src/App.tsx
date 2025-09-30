@@ -2,20 +2,16 @@ import React, { useState, useEffect } from 'react';
 import TaskForm from './components/TaskForm/TaskForm';
 import TaskList from './components/TaskList/TaskList';
 import { checkHealth } from './services/api';
-import { Task } from './types';
 import './App.css';
 
-type FilterType = 'all' | 'pending' | 'completed';
-type ServerStatus = 'checking' | 'connected' | 'disconnected';
-
-function App(): React.JSX.Element {
-  const [filter, setFilter] = useState<FilterType>('all');
-  const [refreshKey, setRefreshKey] = useState<number>(0);
-  const [serverStatus, setServerStatus] = useState<ServerStatus>('checking');
+function App() {
+  const [filter, setFilter] = useState('all'); // 'all', 'pending', 'completed'
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [serverStatus, setServerStatus] = useState('checking');
 
   // Check server connection on app load
   useEffect(() => {
-    const checkServerConnection = async (): Promise<void> => {
+    const checkServerConnection = async () => {
       try {
         await checkHealth();
         setServerStatus('connected');
@@ -28,23 +24,15 @@ function App(): React.JSX.Element {
     checkServerConnection();
   }, []);
 
-  const handleTaskChange = (): void => {
+  const handleTaskChange = () => {
     // Force re-render of task list by updating refresh key
     setRefreshKey(prev => prev + 1);
   };
 
-  const handleTaskCreated = (task: Task): void => {
-    handleTaskChange();
-  };
-
-  const getFilterValue = (): boolean | undefined => {
+  const getFilterValue = () => {
     if (filter === 'pending') return false;
     if (filter === 'completed') return true;
     return undefined; // 'all'
-  };
-
-  const handleRetryConnection = (): void => {
-    window.location.reload();
   };
 
   return (
@@ -65,7 +53,7 @@ function App(): React.JSX.Element {
           <div className="server-error">
             <h2>Server Connection Error</h2>
             <p>Cannot connect to the TODO server. Please ensure the backend server is running on port 8080.</p>
-            <button onClick={handleRetryConnection} className="retry-button">
+            <button onClick={() => window.location.reload()} className="retry-button">
               Retry Connection
             </button>
           </div>
@@ -73,7 +61,7 @@ function App(): React.JSX.Element {
 
         {serverStatus === 'connected' && (
           <>
-            <TaskForm onTaskCreated={handleTaskCreated} />
+            <TaskForm onTaskCreated={handleTaskChange} />
 
             <div className="filter-section">
               <h2>Filter Tasks</h2>

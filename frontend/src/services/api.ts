@@ -10,7 +10,7 @@ import {
 } from '../types';
 
 // Base API configuration
-const API_BASE_URL: string = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1';
+const API_BASE_URL: string = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,

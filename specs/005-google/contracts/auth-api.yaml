@@ -1,0 +1,330 @@
+openapi: 3.0.3
+info:
+  title: Google OAuth Authentication API
+  description: API endpoints for Google OAuth 2.0 authentication flow
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Development server
+
+paths:
+  /auth/google/login:
+    get:
+      summary: Initiate Google OAuth login
+      description: Redirects user to Google OAuth consent screen
+      parameters:
+        - name: redirect_uri
+          in: query
+          required: false
+          description: URL to redirect after successful authentication
+          schema:
+            type: string
+            format: uri
+            example: "http://localhost:3000/dashboard"
+      responses:
+        '302':
+          description: Redirect to Google OAuth authorization URL
+          headers:
+            Location:
+              description: Google OAuth authorization URL with state and PKCE parameters
+              schema:
+                type: string
+                format: uri
+            Set-Cookie:
+              description: OAuth state cookie for security validation
+              schema:
+                type: string
+        '400':
+          description: Invalid redirect URI
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: OAuth configuration error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/google/callback:
+    get:
+      summary: Handle Google OAuth callback
+      description: Processes authorization code from Google OAuth and creates user session
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: Authorization code from Google OAuth
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          description: State parameter for CSRF protection
+          schema:
+            type: string
+        - name: error
+          in: query
+          required: false
+          description: Error code if OAuth failed
+          schema:
+            type: string
+            enum: [access_denied, server_error, temporarily_unavailable]
+      responses:
+        '302':
+          description: Redirect to application with session established
+          headers:
+            Location:
+              description: Redirect URL (from original redirect_uri or default)
+              schema:
+                type: string
+                format: uri
+            Set-Cookie:
+              description: Session token as HTTP-only secure cookie
+              schema:
+                type: string
+        '400':
+          description: Invalid authorization code or state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: OAuth authorization denied by user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Google OAuth service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/session/validate:
+    get:
+      summary: Validate current session
+      description: Validates session token and returns user information
+      security:
+        - SessionCookie: []
+      responses:
+        '200':
+          description: Valid session with user information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '401':
+          description: Invalid or expired session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/session/refresh:
+    post:
+      summary: Refresh OAuth tokens
+      description: Refreshes OAuth access token using refresh token
+      security:
+        - SessionCookie: []
+      responses:
+        '200':
+          description: Tokens refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        '401':
+          description: Invalid session or refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Google OAuth service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      summary: Logout user
+      description: Terminates current session and clears tokens
+      security:
+        - SessionCookie: []
+      responses:
+        '200':
+          description: Successfully logged out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+          headers:
+            Set-Cookie:
+              description: Clear session cookie
+              schema:
+                type: string
+        '401':
+          description: No active session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/revoke-webhook:
+    post:
+      summary: Handle Google OAuth revocation
+      description: Webhook endpoint for Google to notify of revoked access
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: Revoked access or refresh token
+              required:
+                - token
+      responses:
+        '200':
+          description: Revocation processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "revoked"
+        '400':
+          description: Invalid revocation payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: session_token
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "invalid_state"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid OAuth state parameter"
+        details:
+          type: object
+          description: Additional error context
+          additionalProperties: true
+      required:
+        - error
+        - message
+
+    SessionResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserInfo'
+        session:
+          $ref: '#/components/schemas/SessionInfo'
+      required:
+        - user
+        - session
+
+    UserInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: User ID
+          example: 1234
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: "user@gmail.com"
+        name:
+          type: string
+          description: User display name
+          example: "John Doe"
+        oauth_provider:
+          type: string
+          nullable: true
+          description: OAuth provider if OAuth user
+          example: "google"
+        created_at:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2025-09-29T10:30:00Z"
+      required:
+        - id
+        - email
+        - name
+        - created_at
+
+    SessionInfo:
+      type: object
+      properties:
+        session_id:
+          type: string
+          description: Session identifier
+          example: "sess_abc123"
+        expires_at:
+          type: string
+          format: date-time
+          description: Session expiration time
+          example: "2025-09-30T10:30:00Z"
+        last_activity:
+          type: string
+          format: date-time
+          description: Last activity timestamp
+          example: "2025-09-29T14:45:00Z"
+      required:
+        - session_id
+        - expires_at
+        - last_activity
+
+    RefreshResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "refreshed"
+        expires_at:
+          type: string
+          format: date-time
+          description: New token expiration time
+          example: "2025-09-29T15:30:00Z"
+      required:
+        - status
+        - expires_at
+
+    LogoutResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "logged_out"
+        message:
+          type: string
+          example: "Session terminated successfully"
+      required:
+        - status
+        - message
