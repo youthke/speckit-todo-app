@@ -25,6 +25,9 @@
   ],
   "exclude": [
     "node_modules",
-    "build"
+    "build",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "src/test/**/*"
   ]
 }

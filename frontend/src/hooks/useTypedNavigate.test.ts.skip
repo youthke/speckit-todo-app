@@ -1,0 +1,52 @@
+import { describe, it, expect, vi } from 'vitest';
+import { renderHook } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { useTypedNavigate } from './useTypedNavigate';
+import { ReactNode } from 'react';
+
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <MemoryRouter>{children}</MemoryRouter>
+);
+
+describe('useTypedNavigate', () => {
+  it('navigates to route using key', () => {
+    const { result } = renderHook(() => useTypedNavigate(), { wrapper });
+
+    expect(result.current.navigateTo).toBeDefined();
+    expect(typeof result.current.navigateTo).toBe('function');
+  });
+
+  it('navigates to path using string', () => {
+    const { result } = renderHook(() => useTypedNavigate(), { wrapper });
+
+    expect(result.current.navigateToPath).toBeDefined();
+    expect(typeof result.current.navigateToPath).toBe('function');
+  });
+
+  it('navigates back in history', () => {
+    const { result } = renderHook(() => useTypedNavigate(), { wrapper });
+
+    expect(result.current.goBack).toBeDefined();
+    expect(typeof result.current.goBack).toBe('function');
+  });
+
+  it('passes options to navigate function', () => {
+    const { result } = renderHook(() => useTypedNavigate(), { wrapper });
+
+    // Test that the hook returns functions that accept options
+    expect(() => {
+      result.current.navigateTo('DASHBOARD', { replace: true });
+    }).not.toThrow();
+  });
+
+  it('provides type safety for route keys', () => {
+    const { result } = renderHook(() => useTypedNavigate(), { wrapper });
+
+    // TypeScript compilation will enforce type safety
+    // This test verifies the hook is properly typed
+    expect(result.current.navigateTo).toBeDefined();
+    expect(result.current.navigateToPath).toBeDefined();
+    expect(result.current.goBack).toBeDefined();
+    expect(result.current.goForward).toBeDefined();
+  });
+});

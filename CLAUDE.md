@@ -12,6 +12,8 @@ Auto-generated from all feature plans. Last updated: 2025-09-27
 - SQLite database (development), existing schema to be migrated (004-)
 - Go 1.23+, React 19.1.1 with TypeScript 5.x + Gin web framework, GORM ORM, Google OAuth 2.0 libraries (005-google)
 - SQLite (development), existing database schema (005-google)
+- TypeScript 5.9.2, React 19.1.1 + React Router (version TBD - v6 or v7), React DOM 19.1.1, Vite 6.0.11 (006-react-router)
+- N/A (frontend routing only, no data persistence) (006-react-router)
 
 ## Project Structure
 ```
@@ -27,9 +29,9 @@ tests/
 Go 1.21+, Node.js 18+: Follow standard conventions
 
 ## Recent Changes
+- 006-react-router: Added TypeScript 5.9.2, React 19.1.1 + React Router (version TBD - v6 or v7), React DOM 19.1.1, Vite 6.0.11
 - 005-google: Added Go 1.23+, React 19.1.1 with TypeScript 5.x + Gin web framework, GORM ORM, Google OAuth 2.0 libraries
 - 004-: Added Go 1.23+ + Gin web framework, GORM ORM, testify testing framework
-- 003-frontend-typescript: Added TypeScript 5.x (migration from JavaScript ES6+) + React 19.1.1, React Scripts 5.0.1, Testing Library, Axios
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
