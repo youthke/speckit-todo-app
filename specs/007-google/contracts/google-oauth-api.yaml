@@ -1,0 +1,203 @@
+openapi: 3.0.3
+info:
+  title: Google OAuth Signup API
+  description: API endpoints for Google account-based user signup
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /api/auth/google/login:
+    get:
+      summary: Initiate Google OAuth login flow
+      description: |
+        Redirects the user to Google's OAuth consent page.
+        Generates a state token for CSRF protection.
+      operationId: initiateGoogleLogin
+      responses:
+        '302':
+          description: Redirect to Google OAuth authorization page
+          headers:
+            Location:
+              schema:
+                type: string
+                example: https://accounts.google.com/o/oauth2/v2/auth?client_id=...
+            Set-Cookie:
+              schema:
+                type: string
+                description: Sets oauth_state cookie for CSRF validation
+                example: oauth_state=random_token; HttpOnly; SameSite=Lax; Max-Age=600
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/google/callback:
+    get:
+      summary: Handle Google OAuth callback
+      description: |
+        Processes the OAuth callback from Google after user authorization.
+        Exchanges authorization code for tokens, creates or logs in user.
+      operationId: handleGoogleCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: Authorization code from Google
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          description: State token for CSRF validation
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to frontend after successful signup/login
+          headers:
+            Location:
+              schema:
+                type: string
+                example: http://localhost:3000/
+            Set-Cookie:
+              schema:
+                type: string
+                description: Sets session JWT cookie (7-day expiration)
+                example: session_token=jwt_token; HttpOnly; Secure; SameSite=Strict; Max-Age=604800
+        '302 ':
+          description: Redirect to signup page on error
+          headers:
+            Location:
+              schema:
+                type: string
+                example: http://localhost:3000/signup?error=authentication_failed
+        '400':
+          description: Bad request (missing or invalid parameters)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Authentication failed"
+                message: "Invalid state parameter"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/me:
+    get:
+      summary: Get current authenticated user
+      description: Returns user information for the authenticated session
+      operationId: getCurrentUser
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized (no valid session)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session_token
+
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - auth_method
+        - created_at
+      properties:
+        id:
+          type: integer
+          description: Unique user identifier
+          example: 123
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: user@example.com
+        auth_method:
+          type: string
+          enum: [password, google, hybrid]
+          description: Authentication method used
+          example: google
+        created_at:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2025-10-01T12:00:00Z"
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Generic error message (user-facing)
+          example: "Authentication failed"
+        message:
+          type: string
+          description: Detailed error message (for debugging, not always present)
+          example: "Email not verified"
+        code:
+          type: string
+          description: Error code for client-side handling
+          example: "AUTH_FAILED"
+
+  examples:
+    SuccessfulSignup:
+      summary: Successful Google signup flow
+      description: |
+        1. User visits /api/auth/google/login
+        2. Redirected to Google OAuth consent
+        3. User approves, redirected to /api/auth/google/callback?code=abc&state=xyz
+        4. Backend creates user account, sets session cookie
+        5. Redirects to frontend home page
+
+    DuplicateSignup:
+      summary: Duplicate signup attempt
+      description: |
+        1. User with existing Google account visits /api/auth/google/login
+        2. Goes through OAuth flow
+        3. Backend detects existing google_user_id
+        4. Redirects to login page (FR-008)
+        5. User can log in with existing account
+
+    UnverifiedEmail:
+      summary: Unverified email rejection
+      description: |
+        1. User with unverified Google account attempts signup
+        2. OAuth flow completes, ID token contains email_verified=false
+        3. Backend rejects signup with "Authentication failed" message (FR-007)
+        4. Redirects to signup page with error
+
+    AuthenticationError:
+      summary: OAuth error handling
+      description: |
+        1. User denies permission or error occurs during OAuth
+        2. Google redirects to callback with error parameter
+        3. Backend returns "Authentication failed" message (FR-006)
+        4. Redirects to signup page with error
