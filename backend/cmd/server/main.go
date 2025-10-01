@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"todo-app/internal/handlers"
 	"todo-app/internal/models"
 	"todo-app/internal/services"
@@ -13,6 +14,11 @@ import (
 )
 
 func main() {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Printf("Warning: .env file not found or could not be loaded: %v", err)
+	}
+
 	// Initialize database
 	if err := storage.InitDatabase(); err != nil {
 		log.Fatal("Failed to initialize database:", err)
