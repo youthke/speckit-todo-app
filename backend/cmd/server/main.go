@@ -4,13 +4,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"golang.org/x/time/rate"
 	"todo-app/internal/handlers"
 	"todo-app/internal/models"
 	"todo-app/internal/services"
 	"todo-app/internal/storage"
+	"todo-app/middleware"
 )
 
 func main() {
@@ -66,8 +69,12 @@ func main() {
 	healthService := services.NewHealthService()
 	googleOAuthHandler := handlers.NewGoogleOAuthHandler(storage.DB)
 
+	// Initialize rate limiter for signup/OAuth endpoints
+	// 10 requests per 15 minutes = 10 / (15 * 60) = 0.0111 requests per second
+	signupRateLimiter := middleware.NewIPRateLimiter(rate.Every(15*time.Minute)/10, 10)
+
 	// Setup routes
-	setupRoutes(router, taskHandler, healthService, googleOAuthHandler)
+	setupRoutes(router, taskHandler, healthService, googleOAuthHandler, signupRateLimiter)
 
 	// Get port from environment or use default
 	port := os.Getenv("PORT")
@@ -82,7 +89,7 @@ func main() {
 }
 
 // setupRoutes configures all API routes
-func setupRoutes(router *gin.Engine, taskHandler *handlers.TaskHandler, healthService *services.HealthService, googleOAuthHandler *handlers.GoogleOAuthHandler) {
+func setupRoutes(router *gin.Engine, taskHandler *handlers.TaskHandler, healthService *services.HealthService, googleOAuthHandler *handlers.GoogleOAuthHandler, signupRateLimiter *middleware.IPRateLimiter) {
 	// Health check handler function
 	healthHandler := func(c *gin.Context) {
 		healthResponse, err := healthService.GetHealthStatus()
@@ -121,7 +128,8 @@ func setupRoutes(router *gin.Engine, taskHandler *handlers.TaskHandler, healthSe
 			// Google OAuth routes
 			auth := v1.Group("/auth")
 			{
-				auth.GET("/google/login", googleOAuthHandler.GoogleLogin)
+				// Apply rate limiter to signup/login endpoint
+				auth.GET("/google/login", signupRateLimiter.RateLimitMiddleware(), googleOAuthHandler.GoogleLogin)
 				auth.GET("/google/callback", googleOAuthHandler.GoogleCallback)
 			}
 

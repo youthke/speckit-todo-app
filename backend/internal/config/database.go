@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"todo-app/internal/models"
-	legacymodels "todo-app/models"
+	legacymodels "todo-app/internal/models"
 )
 
 // DatabaseConfig holds database configuration

@@ -3,6 +3,7 @@ import { AuthProvider } from './providers/AuthProvider';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import MainLayout from './components/layout/MainLayout';
 import Login from './pages/Login';
+import SignupPage from './pages/SignupPage';
 import AuthCallback from './pages/AuthCallback';
 import Dashboard from './pages/Dashboard';
 import TodoListPage from './pages/TodoList';
@@ -21,6 +22,7 @@ function App() {
 
           {/* Public routes */}
           <Route path={ROUTES.LOGIN} element={<Login />} />
+          <Route path={ROUTES.SIGNUP} element={<SignupPage />} />
           <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
 
           {/* Protected routes with layout */}

@@ -1,0 +1,295 @@
+openapi: 3.0.3
+info:
+  title: Signup API
+  description: |
+    Google OAuth signup endpoints for todo-app.
+
+    **Behavior Change**: The `/api/v1/auth/google/callback` endpoint now auto-logs in existing users
+    instead of redirecting them to the login page. This allows the signup flow to seamlessly handle
+    both new user registration and existing user re-authentication.
+
+    **Feature**: 008-signup
+  version: 1.0.0
+  contact:
+    name: todo-app Team
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+tags:
+  - name: Signup
+    description: User signup operations via Google OAuth
+  - name: Rate Limiting
+    description: Rate limiting for signup attempts
+
+paths:
+  /auth/google/login:
+    get:
+      tags:
+        - Signup
+      summary: Initiate Google OAuth signup flow
+      description: |
+        Initiates the Google OAuth 2.0 authorization flow for user signup.
+        Generates a CSRF state token and redirects the user to Google's consent screen.
+
+        **Rate Limiting**: This endpoint is rate-limited to 10 attempts per 15 minutes per IP address.
+      operationId: googleOAuthLogin
+      responses:
+        '302':
+          description: Redirect to Google OAuth consent screen
+          headers:
+            Location:
+              description: Google OAuth authorization URL
+              schema:
+                type: string
+                example: https://accounts.google.com/o/oauth2/v2/auth?client_id=...&redirect_uri=...&scope=openid+email+profile&state=abc123
+            Set-Cookie:
+              description: OAuth state token for CSRF protection (10 min expiration)
+              schema:
+                type: string
+                example: oauth_state=abc123xyz; Path=/; HttpOnly; Max-Age=600
+        '429':
+          description: Rate limit exceeded
+          headers:
+            Retry-After:
+              description: Seconds until rate limit resets
+              schema:
+                type: integer
+                example: 900
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+      security: []
+
+  /auth/google/callback:
+    get:
+      tags:
+        - Signup
+      summary: Handle Google OAuth callback
+      description: |
+        Handles the OAuth callback from Google after user authorization.
+        Validates state, exchanges authorization code for user info, and creates/authenticates user.
+
+        **Behavior**:
+        - If google_id does NOT exist → Create new user + session → Redirect to home
+        - If google_id EXISTS → Create session for existing user (auto-login) → Redirect to home
+
+        **CSRF Protection**: Validates state parameter against cookie.
+        **Email Requirement**: Requires verified email from Google.
+      operationId: googleOAuthCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: OAuth authorization code from Google
+          schema:
+            type: string
+            example: 4/0AY0e-g7X...
+        - name: state
+          in: query
+          required: true
+          description: CSRF state token (must match cookie)
+          schema:
+            type: string
+            example: abc123xyz
+        - name: error
+          in: query
+          required: false
+          description: OAuth error code (if user denied permission)
+          schema:
+            type: string
+            enum:
+              - access_denied
+            example: access_denied
+      responses:
+        '302':
+          description: Redirect after successful signup/login or error
+          headers:
+            Location:
+              description: Redirect URL
+              schema:
+                type: string
+                enum:
+                  - http://localhost:3000/
+                  - http://localhost:3000/signup?error=authentication_failed
+                  - http://localhost:3000/signup?error=rate_limit_exceeded
+            Set-Cookie:
+              description: Session token (7 day expiration) OR cleared oauth_state
+              schema:
+                type: string
+                example: session_token=xyz789abc; Path=/; HttpOnly; Max-Age=604800
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTTP redirect response
+        '400':
+          description: Bad request (invalid state, missing code)
+          content:
+            text/html:
+              schema:
+                type: string
+                description: Redirects to /signup?error=authentication_failed
+      security: []
+
+components:
+  schemas:
+    RateLimitError:
+      type: object
+      required:
+        - error
+        - message
+        - retry_after
+      properties:
+        error:
+          type: string
+          enum:
+            - rate_limit_exceeded
+          example: rate_limit_exceeded
+        message:
+          type: string
+          example: Too many signup attempts. Please try again later.
+        retry_after:
+          type: integer
+          description: Seconds until rate limit resets
+          example: 900
+
+    GoogleUserInfo:
+      type: object
+      description: User information received from Google OAuth
+      required:
+        - google_user_id
+        - email
+        - email_verified
+      properties:
+        google_user_id:
+          type: string
+          description: Google account identifier (sub claim)
+          example: "1234567890123456789"
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: user@example.com
+        name:
+          type: string
+          description: User display name (optional)
+          example: John Doe
+        picture:
+          type: string
+          format: uri
+          description: Profile picture URL (optional)
+          example: https://lh3.googleusercontent.com/a-/AOh14Gi...
+        email_verified:
+          type: boolean
+          description: Whether email is verified by Google
+          example: true
+
+    User:
+      type: object
+      description: User entity stored in database
+      required:
+        - id
+        - email
+        - google_id
+        - created_at
+        - updated_at
+        - email_verified
+      properties:
+        id:
+          type: integer
+          description: Unique user identifier
+          example: 42
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: user@example.com
+        google_id:
+          type: string
+          description: Google account identifier
+          example: "1234567890123456789"
+        name:
+          type: string
+          nullable: true
+          description: User display name (optional)
+          example: John Doe
+        profile_picture_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Profile picture URL (optional)
+          example: https://lh3.googleusercontent.com/a-/AOh14Gi...
+        email_verified:
+          type: boolean
+          description: Email verification status
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2025-10-01T12:34:56Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last modification timestamp
+          example: "2025-10-01T12:34:56Z"
+
+    Session:
+      type: object
+      description: User session
+      required:
+        - id
+        - user_id
+        - token
+        - expires_at
+        - created_at
+      properties:
+        id:
+          type: integer
+          description: Unique session identifier
+          example: 123
+        user_id:
+          type: integer
+          description: Reference to user
+          example: 42
+        token:
+          type: string
+          description: Session token (stored in cookie)
+          example: xyz789abc...
+        expires_at:
+          type: string
+          format: date-time
+          description: Session expiration timestamp
+          example: "2025-10-08T12:34:56Z"
+        created_at:
+          type: string
+          format: date-time
+          description: Session creation timestamp
+          example: "2025-10-01T12:34:56Z"
+
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: session_token
+      description: HTTP-only session cookie (7 day expiration)
+
+# Rate Limiting Configuration
+x-rate-limiting:
+  login_endpoint:
+    endpoint: /api/v1/auth/google/login
+    limit: 10
+    window: 900  # 15 minutes in seconds
+    per: ip_address
+    algorithm: token_bucket
+    burst: 10
+    response:
+      status: 429
+      headers:
+        Retry-After: seconds_until_reset
+      body:
+        error: rate_limit_exceeded
+        message: Too many signup attempts. Please try again later.
