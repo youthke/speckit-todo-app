@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
-	"todo-app/models"
+	"todo-app/internal/models"
 )
 
 // OAuthService handles OAuth flow operations

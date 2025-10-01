@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"todo-app/models"
+	"todo-app/internal/models"
 )
 
 // SessionService handles session management operations

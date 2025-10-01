@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"todo-app/internal/models"
 	"todo-app/internal/services"
 )
 
@@ -86,6 +87,13 @@ func (h *GoogleOAuthHandler) GoogleCallback(c *gin.Context) {
 		return
 	}
 
+	// Validate email is present
+	if userInfo.Email == "" {
+		log.Printf("No email provided by Google for user: %s", userInfo.GoogleUserID)
+		c.Redirect(http.StatusFound, "http://localhost:3000/signup?error=authentication_failed")
+		return
+	}
+
 	// Validate email is verified
 	if !userInfo.EmailVerified {
 		log.Printf("Email not verified for user: %s", userInfo.Email)
@@ -101,19 +109,20 @@ func (h *GoogleOAuthHandler) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	// If user already exists, redirect to login page
+	var user *models.User
+	// If user already exists, auto-login (create new session)
 	if existingUser != nil {
-		log.Printf("User already exists with Google ID: %s, redirecting to login", userInfo.GoogleUserID)
-		c.Redirect(http.StatusFound, "http://localhost:3000/login")
-		return
-	}
-
-	// Create new user from Google info
-	user, err := h.oauthService.CreateUserFromGoogle(userInfo)
-	if err != nil {
-		log.Printf("Failed to create user from Google: %v", err)
-		c.Redirect(http.StatusFound, "http://localhost:3000/signup?error=authentication_failed")
-		return
+		log.Printf("User already exists with Google ID: %s, auto-logging in", userInfo.GoogleUserID)
+		user = existingUser
+	} else {
+		// Create new user from Google info
+		var err error
+		user, err = h.oauthService.CreateUserFromGoogle(userInfo)
+		if err != nil {
+			log.Printf("Failed to create user from Google: %v", err)
+			c.Redirect(http.StatusFound, "http://localhost:3000/signup?error=authentication_failed")
+			return
+		}
 	}
 
 	// Create session token

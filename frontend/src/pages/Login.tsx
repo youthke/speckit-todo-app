@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import GoogleLoginButton from '../components/auth/GoogleLoginButton';
 import { useAuth } from '../hooks/useAuth';
+import { ROUTES } from '../routes/routeConfig';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -79,7 +80,7 @@ const Login: React.FC = () => {
           </form>
 
           <div className="login-footer">
-            <p>Don't have an account? <a href="/signup">Sign up</a></p>
+            <p>Don't have an account? <Link to={ROUTES.SIGNUP}>Sign up</Link></p>
           </div>
         </div>
       </div>

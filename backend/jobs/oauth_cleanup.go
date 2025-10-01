@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"todo-app/models"
+	"todo-app/internal/models"
 )
 
 // OAuthCleanupJob handles cleanup of expired OAuth state records

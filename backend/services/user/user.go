@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"todo-app/models"
+	"todo-app/internal/models"
 )
 
 // UserService handles user-related operations
