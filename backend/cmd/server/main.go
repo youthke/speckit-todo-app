@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"todo-app/internal/handlers"
 	"todo-app/internal/models"
 	"todo-app/internal/services"
@@ -13,6 +14,11 @@ import (
 )
 
 func main() {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Printf("Warning: .env file not found or could not be loaded: %v", err)
+	}
+
 	// Initialize database
 	if err := storage.InitDatabase(); err != nil {
 		log.Fatal("Failed to initialize database:", err)
@@ -58,9 +64,10 @@ func main() {
 	// Initialize handlers
 	taskHandler := handlers.NewTaskHandler()
 	healthService := services.NewHealthService()
+	googleOAuthHandler := handlers.NewGoogleOAuthHandler(storage.DB)
 
 	// Setup routes
-	setupRoutes(router, taskHandler, healthService)
+	setupRoutes(router, taskHandler, healthService, googleOAuthHandler)
 
 	// Get port from environment or use default
 	port := os.Getenv("PORT")
@@ -75,7 +82,7 @@ func main() {
 }
 
 // setupRoutes configures all API routes
-func setupRoutes(router *gin.Engine, taskHandler *handlers.TaskHandler, healthService *services.HealthService) {
+func setupRoutes(router *gin.Engine, taskHandler *handlers.TaskHandler, healthService *services.HealthService, googleOAuthHandler *handlers.GoogleOAuthHandler) {
 	// Health check handler function
 	healthHandler := func(c *gin.Context) {
 		healthResponse, err := healthService.GetHealthStatus()
@@ -111,6 +118,13 @@ func setupRoutes(router *gin.Engine, taskHandler *handlers.TaskHandler, healthSe
 		// API v1 routes
 		v1 := api.Group("/v1")
 		{
+			// Google OAuth routes
+			auth := v1.Group("/auth")
+			{
+				auth.GET("/google/login", googleOAuthHandler.GoogleLogin)
+				auth.GET("/google/callback", googleOAuthHandler.GoogleCallback)
+			}
+
 			// Task routes
 			tasks := v1.Group("/tasks")
 			{

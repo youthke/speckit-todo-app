@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	internalmodels "todo-app/internal/models"
 )
 
 // AuthenticationSession represents an active user session with OAuth token management
 type AuthenticationSession struct {
 	ID        string `json:"id" gorm:"primaryKey;type:varchar(255)"`
 	UserID    uint   `json:"user_id" gorm:"not null;index"`
-	User      User   `json:"user" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	User      internalmodels.User   `json:"user" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 
 	// Session tokens
 	SessionToken string `json:"-" gorm:"type:text;uniqueIndex;not null"`
@@ -189,7 +190,7 @@ func (s *AuthenticationSession) ToResponse() SessionResponse {
 type SessionValidationResult struct {
 	Valid         bool                   `json:"valid"`
 	Session       *AuthenticationSession `json:"session,omitempty"`
-	User          *User                  `json:"user,omitempty"`
+	User          *internalmodels.User   `json:"user,omitempty"`
 	NeedsRefresh  bool                   `json:"needs_refresh"`
 	Error         string                 `json:"error,omitempty"`
 }
