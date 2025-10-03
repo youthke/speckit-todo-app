@@ -8,8 +8,8 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"domain/auth/entities"
 	"todo-app/internal/models"
-	legacymodels "todo-app/internal/models"
 )
 
 // DatabaseConfig holds database configuration
@@ -70,8 +70,8 @@ func AutoMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&models.User{},
 		&models.GoogleIdentity{},
-		&legacymodels.AuthenticationSession{},
-		&legacymodels.OAuthState{},
+		&entities.AuthenticationSession{},
+		&entities.OAuthState{},
 	)
 }
 

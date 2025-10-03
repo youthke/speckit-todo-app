@@ -4,9 +4,9 @@ import (
 	"errors"
 	"time"
 
-	"todo-app/domain/user/entities"
-	"todo-app/domain/user/repositories"
-	"todo-app/domain/user/valueobjects"
+	"domain/user/entities"
+	"domain/user/repositories"
+	"domain/user/valueobjects"
 )
 
 // ProfileUpdateData represents data for profile updates

@@ -76,7 +76,8 @@ func (i *IPRateLimiter) RateLimitMiddleware() gin.HandlerFunc {
 		if !limiter.Allow() {
 			// Calculate retry-after in seconds
 			reservation := limiter.Reserve()
-			retryAfter := int(time.Until(reservation.Timepoint()).Seconds())
+			delay := reservation.DelayFrom(time.Now())
+			retryAfter := int(delay.Seconds())
 			reservation.Cancel() // Cancel the reservation since we're rejecting
 
 			c.Header("Retry-After", string(rune(retryAfter)))

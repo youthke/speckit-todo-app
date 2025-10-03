@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"todo-app/internal/models"
+	"domain/auth/entities"
 )
 
 // OAuthCleanupJob handles cleanup of expired OAuth state records
@@ -63,7 +63,7 @@ func (j *OAuthCleanupJob) cleanup(ctx context.Context) {
 	// Delete expired OAuth states
 	result := j.db.WithContext(ctx).
 		Where("expires_at < ?", time.Now()).
-		Delete(&models.OAuthState{})
+		Delete(&entities.OAuthState{})
 
 	if result.Error != nil {
 		log.Printf("Error cleaning up OAuth states: %v", result.Error)
@@ -90,14 +90,14 @@ func (j *OAuthCleanupJob) GetStats(ctx context.Context) (map[string]interface{},
 
 	// Count total OAuth states
 	if err := j.db.WithContext(ctx).
-		Model(&models.OAuthState{}).
+		Model(&entities.OAuthState{}).
 		Count(&totalCount).Error; err != nil {
 		return nil, err
 	}
 
 	// Count expired OAuth states
 	if err := j.db.WithContext(ctx).
-		Model(&models.OAuthState{}).
+		Model(&entities.OAuthState{}).
 		Where("expires_at < ?", time.Now()).
 		Count(&expiredCount).Error; err != nil {
 		return nil, err
@@ -115,7 +115,7 @@ func CleanupOAuthStatesOlderThan(db *gorm.DB, duration time.Duration) error {
 	cutoffTime := time.Now().Add(-duration)
 
 	result := db.Where("created_at < ?", cutoffTime).
-		Delete(&models.OAuthState{})
+		Delete(&entities.OAuthState{})
 
 	if result.Error != nil {
 		return result.Error

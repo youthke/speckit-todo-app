@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"todo-app/domain/task/valueobjects"
-	uservo "todo-app/domain/user/valueobjects"
+	"domain/task/valueobjects"
+	uservo "domain/user/valueobjects"
 )
 
 // Task represents a domain entity for task management

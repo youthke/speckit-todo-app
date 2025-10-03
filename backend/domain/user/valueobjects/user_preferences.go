@@ -3,7 +3,7 @@ package valueobjects
 import (
 	"errors"
 
-	"todo-app/domain/task/valueobjects"
+	"domain/task/valueobjects"
 )
 
 // UserPreferences represents user preference settings value object

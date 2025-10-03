@@ -1,7 +1,6 @@
 package valueobjects
 
 import (
-	"errors"
 	"fmt"
 )
 

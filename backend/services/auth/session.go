@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"domain/auth/entities"
 	"todo-app/internal/models"
 )
 
@@ -35,11 +36,11 @@ type CreateSessionRequest struct {
 }
 
 // CreateSession creates a new authentication session
-func (s *SessionService) CreateSession(req CreateSessionRequest) (*models.AuthenticationSession, string, error) {
+func (s *SessionService) CreateSession(req CreateSessionRequest) (*entities.AuthenticationSession, string, error) {
 	// Calculate session expiration (24 hours)
 	sessionExpiresAt := time.Now().Add(24 * time.Hour)
 
-	var session *models.AuthenticationSession
+	var session *entities.AuthenticationSession
 
 	if req.IsOAuth && req.AccessToken != "" {
 		// Create OAuth session
@@ -48,7 +49,7 @@ func (s *SessionService) CreateSession(req CreateSessionRequest) (*models.Authen
 			tokenExpiry = *req.TokenExpiry
 		}
 
-		session = models.NewOAuthSession(
+		session = entities.NewOAuthSession(
 			req.UserID,
 			"", // JWT token will be set below
 			req.AccessToken,
@@ -60,7 +61,7 @@ func (s *SessionService) CreateSession(req CreateSessionRequest) (*models.Authen
 		)
 	} else {
 		// Create regular session
-		session = models.NewSession(
+		session = entities.NewSession(
 			req.UserID,
 			"", // JWT token will be set below
 			sessionExpiresAt,
@@ -86,22 +87,22 @@ func (s *SessionService) CreateSession(req CreateSessionRequest) (*models.Authen
 }
 
 // ValidateSession validates a session token and returns the session
-func (s *SessionService) ValidateSession(tokenString string) (*models.SessionValidationResult, error) {
+func (s *SessionService) ValidateSession(tokenString string) (*entities.SessionValidationResult, error) {
 	// Validate JWT token
 	claims, err := s.jwtService.ValidateToken(tokenString)
 	if err != nil {
-		return &models.SessionValidationResult{
+		return &entities.SessionValidationResult{
 			Valid: false,
 			Error: "invalid token: " + err.Error(),
 		}, nil
 	}
 
 	// Find session in database
-	var session models.AuthenticationSession
-	result := s.db.Preload("User").Where("id = ?", claims.SessionID).First(&session)
+	var session entities.AuthenticationSession
+	result := s.db.Where("id = ?", claims.SessionID).First(&session)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return &models.SessionValidationResult{
+			return &entities.SessionValidationResult{
 				Valid: false,
 				Error: "session not found",
 			}, nil
@@ -113,9 +114,18 @@ func (s *SessionService) ValidateSession(tokenString string) (*models.SessionVal
 	if session.IsExpired() {
 		// Delete expired session
 		s.db.Delete(&session)
-		return &models.SessionValidationResult{
+		return &entities.SessionValidationResult{
 			Valid: false,
 			Error: "session expired",
+		}, nil
+	}
+
+	// Load user separately as simple model
+	var user models.User
+	if err := s.db.Where("id = ?", session.UserID).First(&user).Error; err != nil {
+		return &entities.SessionValidationResult{
+			Valid: false,
+			Error: "user not found",
 		}, nil
 	}
 
@@ -126,20 +136,20 @@ func (s *SessionService) ValidateSession(tokenString string) (*models.SessionVal
 	// Check if OAuth tokens need refresh
 	needsRefresh := session.NeedsRefresh()
 
-	return &models.SessionValidationResult{
+	return &entities.SessionValidationResult{
 		Valid:        true,
 		Session:      &session,
-		User:         &session.User,
+		User:         &user,
 		NeedsRefresh: needsRefresh,
 	}, nil
 }
 
 // RefreshSession refreshes a session and extends its expiration
-func (s *SessionService) RefreshSession(sessionID string) (*models.AuthenticationSession, string, error) {
-	var session models.AuthenticationSession
+func (s *SessionService) RefreshSession(sessionID string) (*entities.AuthenticationSession, string, error) {
+	var session entities.AuthenticationSession
 
 	// Find session
-	result := s.db.Preload("User").Where("id = ?", sessionID).First(&session)
+	result := s.db.Where("id = ?", sessionID).First(&session)
 	if result.Error != nil {
 		return nil, "", result.Error
 	}
@@ -147,6 +157,12 @@ func (s *SessionService) RefreshSession(sessionID string) (*models.Authenticatio
 	// Check if session is expired
 	if session.IsExpired() {
 		return nil, "", errors.New("session has expired")
+	}
+
+	// Get user for JWT generation
+	var user models.User
+	if err := s.db.Where("id = ?", session.UserID).First(&user).Error; err != nil {
+		return nil, "", err
 	}
 
 	// Extend session
@@ -157,7 +173,7 @@ func (s *SessionService) RefreshSession(sessionID string) (*models.Authenticatio
 	// Generate new JWT token
 	jwtToken, err := s.jwtService.GenerateToken(
 		session.UserID,
-		session.User.Email,
+		user.Email,
 		session.ID,
 		session.IsOAuthSession(),
 	)
@@ -177,7 +193,7 @@ func (s *SessionService) RefreshSession(sessionID string) (*models.Authenticatio
 
 // TerminateSession terminates a session
 func (s *SessionService) TerminateSession(sessionID string) error {
-	var session models.AuthenticationSession
+	var session entities.AuthenticationSession
 
 	// Find session
 	result := s.db.Where("id = ?", sessionID).First(&session)
@@ -198,13 +214,13 @@ func (s *SessionService) TerminateSession(sessionID string) error {
 
 // TerminateAllUserSessions terminates all sessions for a user
 func (s *SessionService) TerminateAllUserSessions(userID uint) error {
-	result := s.db.Where("user_id = ?", userID).Delete(&models.AuthenticationSession{})
+	result := s.db.Where("user_id = ?", userID).Delete(&entities.AuthenticationSession{})
 	return result.Error
 }
 
 // GetUserSessions retrieves all active sessions for a user
-func (s *SessionService) GetUserSessions(userID uint) ([]models.AuthenticationSession, error) {
-	var sessions []models.AuthenticationSession
+func (s *SessionService) GetUserSessions(userID uint) ([]entities.AuthenticationSession, error) {
+	var sessions []entities.AuthenticationSession
 
 	result := s.db.Where("user_id = ? AND session_expires_at > ?", userID, time.Now()).
 		Order("created_at DESC").
@@ -219,7 +235,7 @@ func (s *SessionService) GetUserSessions(userID uint) ([]models.AuthenticationSe
 
 // CleanupExpiredSessions removes expired sessions from the database
 func (s *SessionService) CleanupExpiredSessions() (int64, error) {
-	result := s.db.Where("session_expires_at <= ?", time.Now()).Delete(&models.AuthenticationSession{})
+	result := s.db.Where("session_expires_at <= ?", time.Now()).Delete(&entities.AuthenticationSession{})
 	if result.Error != nil {
 		return 0, result.Error
 	}
@@ -228,8 +244,8 @@ func (s *SessionService) CleanupExpiredSessions() (int64, error) {
 }
 
 // GetSession retrieves a session by ID
-func (s *SessionService) GetSession(sessionID string) (*models.AuthenticationSession, error) {
-	var session models.AuthenticationSession
+func (s *SessionService) GetSession(sessionID string) (*entities.AuthenticationSession, error) {
+	var session entities.AuthenticationSession
 
 	result := s.db.Preload("User").Where("id = ?", sessionID).First(&session)
 	if result.Error != nil {
@@ -241,13 +257,13 @@ func (s *SessionService) GetSession(sessionID string) (*models.AuthenticationSes
 
 // UpdateSessionActivity updates the last activity timestamp of a session
 func (s *SessionService) UpdateSessionActivity(sessionID string) error {
-	return s.db.Model(&models.AuthenticationSession{}).
+	return s.db.Model(&entities.AuthenticationSession{}).
 		Where("id = ?", sessionID).
 		Update("last_activity", time.Now()).Error
 }
 
 // GetSessionByToken retrieves a session by its JWT token
-func (s *SessionService) GetSessionByToken(tokenString string) (*models.AuthenticationSession, error) {
+func (s *SessionService) GetSessionByToken(tokenString string) (*entities.AuthenticationSession, error) {
 	// Extract session ID from token
 	sessionID, err := s.jwtService.ExtractSessionID(tokenString)
 	if err != nil {
@@ -260,7 +276,7 @@ func (s *SessionService) GetSessionByToken(tokenString string) (*models.Authenti
 // IsSessionValid checks if a session is valid without full validation
 func (s *SessionService) IsSessionValid(sessionID string) (bool, error) {
 	var count int64
-	err := s.db.Model(&models.AuthenticationSession{}).
+	err := s.db.Model(&entities.AuthenticationSession{}).
 		Where("id = ? AND session_expires_at > ?", sessionID, time.Now()).
 		Count(&count).Error
 
