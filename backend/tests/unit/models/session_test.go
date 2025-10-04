@@ -9,7 +9,8 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"todo-app/internal/models"
+	"domain/auth/entities"
+	"todo-app/internal/dtos"
 )
 
 func setupSessionTestDB(t *testing.T) *gorm.DB {
@@ -17,14 +18,14 @@ func setupSessionTestDB(t *testing.T) *gorm.DB {
 	require.NoError(t, err)
 
 	// Auto-migrate the tables
-	err = db.AutoMigrate(&models.User{}, &models.AuthenticationSession{})
+	err = db.AutoMigrate(&dtos.User{}, &entities.AuthenticationSession{})
 	require.NoError(t, err)
 
 	return db
 }
 
-func createTestUser(t *testing.T, db *gorm.DB) models.User {
-	user := models.User{
+func createTestUser(t *testing.T, db *gorm.DB) dtos.User {
+	user := dtos.User{
 		Email:        "session_test@example.com",
 		Name:         "Session Test User",
 		PasswordHash: "hashed_password",
@@ -42,13 +43,13 @@ func TestAuthenticationSession_Validation(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		session     models.AuthenticationSession
+		session     entities.AuthenticationSession
 		shouldError bool
 		errorMsg    string
 	}{
 		{
 			name: "valid session",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				UserID:           user.ID,
 				SessionToken:     "valid.jwt.token",
 				SessionExpiresAt: time.Now().Add(24 * time.Hour),
@@ -60,9 +61,9 @@ func TestAuthenticationSession_Validation(t *testing.T) {
 		},
 		{
 			name: "valid OAuth session",
-			session: func() models.AuthenticationSession {
+			session: func() entities.AuthenticationSession {
 				tokenExp := time.Now().Add(1 * time.Hour)
-				return models.AuthenticationSession{
+				return entities.AuthenticationSession{
 					UserID:           user.ID,
 					SessionToken:     "valid.oauth.jwt.token",
 					RefreshToken:     "encrypted_refresh_token",
@@ -78,7 +79,7 @@ func TestAuthenticationSession_Validation(t *testing.T) {
 		},
 		{
 			name: "invalid - missing user_id",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				SessionToken:     "valid.jwt.token",
 				SessionExpiresAt: time.Now().Add(24 * time.Hour),
 				LastActivity:     time.Now(),
@@ -88,7 +89,7 @@ func TestAuthenticationSession_Validation(t *testing.T) {
 		},
 		{
 			name: "invalid - empty session_token",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				UserID:           user.ID,
 				SessionExpiresAt: time.Now().Add(24 * time.Hour),
 				LastActivity:     time.Now(),
@@ -98,7 +99,7 @@ func TestAuthenticationSession_Validation(t *testing.T) {
 		},
 		{
 			name: "invalid - expired session",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				UserID:           user.ID,
 				SessionToken:     "expired.jwt.token",
 				SessionExpiresAt: time.Now().Add(-1 * time.Hour), // Expired
@@ -109,7 +110,7 @@ func TestAuthenticationSession_Validation(t *testing.T) {
 		},
 		{
 			name: "invalid - access_token without token_expires_at",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				UserID:           user.ID,
 				SessionToken:     "oauth.jwt.token",
 				AccessToken:      "encrypted_access_token",
@@ -121,7 +122,7 @@ func TestAuthenticationSession_Validation(t *testing.T) {
 		},
 		{
 			name: "invalid - future session expiry beyond 24h",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				UserID:           user.ID,
 				SessionToken:     "long.jwt.token",
 				SessionExpiresAt: time.Now().Add(25 * time.Hour), // Too long
@@ -152,7 +153,7 @@ func TestAuthenticationSession_CreateSession(t *testing.T) {
 	db := setupSessionTestDB(t)
 	user := createTestUser(t, db)
 
-	session := models.AuthenticationSession{
+	session := entities.AuthenticationSession{
 		UserID:           user.ID,
 		SessionToken:     "test.jwt.token.12345",
 		SessionExpiresAt: time.Now().Add(24 * time.Hour),
@@ -171,7 +172,7 @@ func TestAuthenticationSession_CreateOAuthSession(t *testing.T) {
 	db := setupSessionTestDB(t)
 	user := createTestUser(t, db)
 
-	session := models.AuthenticationSession{
+	session := entities.AuthenticationSession{
 		UserID:           user.ID,
 		SessionToken:     "oauth.jwt.token.67890",
 		RefreshToken:     "encrypted_refresh_token_abc123",
@@ -196,7 +197,7 @@ func TestAuthenticationSession_UniqueSessionToken(t *testing.T) {
 	user := createTestUser(t, db)
 
 	// Create first session
-	session1 := models.AuthenticationSession{
+	session1 := entities.AuthenticationSession{
 		UserID:           user.ID,
 		SessionToken:     "unique.session.token",
 		SessionExpiresAt: time.Now().Add(24 * time.Hour),
@@ -207,7 +208,7 @@ func TestAuthenticationSession_UniqueSessionToken(t *testing.T) {
 	require.NoError(t, result.Error)
 
 	// Try to create session with same token
-	session2 := models.AuthenticationSession{
+	session2 := entities.AuthenticationSession{
 		UserID:           user.ID,
 		SessionToken:     "unique.session.token", // Same token
 		SessionExpiresAt: time.Now().Add(24 * time.Hour),
@@ -222,26 +223,26 @@ func TestAuthenticationSession_UniqueSessionToken(t *testing.T) {
 func TestAuthenticationSession_IsExpired(t *testing.T) {
 	tests := []struct {
 		name     string
-		session  models.AuthenticationSession
+		session  entities.AuthenticationSession
 		expected bool
 	}{
 		{
 			name: "not expired session",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				SessionExpiresAt: time.Now().Add(1 * time.Hour),
 			},
 			expected: false,
 		},
 		{
 			name: "expired session",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				SessionExpiresAt: time.Now().Add(-1 * time.Hour),
 			},
 			expected: true,
 		},
 		{
 			name: "session expiring now",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				SessionExpiresAt: time.Now(),
 			},
 			expected: true,
@@ -259,19 +260,19 @@ func TestAuthenticationSession_IsExpired(t *testing.T) {
 func TestAuthenticationSession_IsTokenExpired(t *testing.T) {
 	tests := []struct {
 		name     string
-		session  models.AuthenticationSession
+		session  entities.AuthenticationSession
 		expected bool
 	}{
 		{
 			name: "no token expiry set",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				AccessToken: "some_token",
 			},
 			expected: false,
 		},
 		{
 			name: "token not expired",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				AccessToken:    "some_token",
 				TokenExpiresAt: time.Now().Add(30 * time.Minute),
 			},
@@ -279,7 +280,7 @@ func TestAuthenticationSession_IsTokenExpired(t *testing.T) {
 		},
 		{
 			name: "token expired",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				AccessToken:    "some_token",
 				TokenExpiresAt: time.Now().Add(-10 * time.Minute),
 			},
@@ -298,19 +299,19 @@ func TestAuthenticationSession_IsTokenExpired(t *testing.T) {
 func TestAuthenticationSession_NeedsRefresh(t *testing.T) {
 	tests := []struct {
 		name     string
-		session  models.AuthenticationSession
+		session  entities.AuthenticationSession
 		expected bool
 	}{
 		{
 			name: "no OAuth tokens - no refresh needed",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				SessionExpiresAt: time.Now().Add(12 * time.Hour),
 			},
 			expected: false,
 		},
 		{
 			name: "OAuth tokens not expiring soon",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				AccessToken:      "token",
 				TokenExpiresAt:   time.Now().Add(30 * time.Minute),
 				SessionExpiresAt: time.Now().Add(12 * time.Hour),
@@ -319,7 +320,7 @@ func TestAuthenticationSession_NeedsRefresh(t *testing.T) {
 		},
 		{
 			name: "OAuth tokens expiring soon",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				AccessToken:      "token",
 				TokenExpiresAt:   time.Now().Add(2 * time.Minute),
 				SessionExpiresAt: time.Now().Add(12 * time.Hour),
@@ -328,7 +329,7 @@ func TestAuthenticationSession_NeedsRefresh(t *testing.T) {
 		},
 		{
 			name: "OAuth tokens expired",
-			session: models.AuthenticationSession{
+			session: entities.AuthenticationSession{
 				AccessToken:      "token",
 				TokenExpiresAt:   time.Now().Add(-5 * time.Minute),
 				SessionExpiresAt: time.Now().Add(12 * time.Hour),
@@ -346,7 +347,7 @@ func TestAuthenticationSession_NeedsRefresh(t *testing.T) {
 }
 
 func TestAuthenticationSession_UpdateActivity(t *testing.T) {
-	session := models.AuthenticationSession{
+	session := entities.AuthenticationSession{
 		LastActivity: time.Now().Add(-1 * time.Hour),
 	}
 

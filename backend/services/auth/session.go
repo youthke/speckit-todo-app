@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 	"domain/auth/entities"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 )
 
 // SessionService handles session management operations
@@ -121,7 +121,7 @@ func (s *SessionService) ValidateSession(tokenString string) (*entities.SessionV
 	}
 
 	// Load user separately as simple model
-	var user models.User
+	var user dtos.User
 	if err := s.db.Where("id = ?", session.UserID).First(&user).Error; err != nil {
 		return &entities.SessionValidationResult{
 			Valid: false,
@@ -160,7 +160,7 @@ func (s *SessionService) RefreshSession(sessionID string) (*entities.Authenticat
 	}
 
 	// Get user for JWT generation
-	var user models.User
+	var user dtos.User
 	if err := s.db.Where("id = ?", session.UserID).First(&user).Error; err != nil {
 		return nil, "", err
 	}

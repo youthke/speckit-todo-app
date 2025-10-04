@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"todo-app/internal/storage"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 )
 
 // TestGoogleSignup_DuplicateUser_RedirectsToLogin tests duplicate signup prevention

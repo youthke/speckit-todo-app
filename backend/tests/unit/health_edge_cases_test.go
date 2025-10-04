@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"todo-app/internal/models"
+	"domain/health/entities"
 	"todo-app/internal/services"
 )
 
@@ -17,39 +17,39 @@ func TestHealthServiceDatabaseConnectionTimeout(t *testing.T) {
 	tests := []struct {
 		name               string
 		pingError          error
-		expectedDBStatus   models.DatabaseStatus
-		expectedHealth     models.HealthStatus
+		expectedDBStatus   entities.DatabaseStatus
+		expectedHealth     entities.HealthStatus
 		shouldFailValidation bool
 	}{
 		{
 			name:             "Database connection timeout",
 			pingError:        sql.ErrConnDone,
-			expectedDBStatus: models.DatabaseStatusDisconnected,
-			expectedHealth:   models.HealthStatusDegraded,
+			expectedDBStatus: entities.DatabaseStatusDisconnected,
+			expectedHealth:   entities.HealthStatusDegraded,
 		},
 		{
 			name:             "Database connection refused",
 			pingError:        errors.New("connection refused"),
-			expectedDBStatus: models.DatabaseStatusDisconnected,
-			expectedHealth:   models.HealthStatusDegraded,
+			expectedDBStatus: entities.DatabaseStatusDisconnected,
+			expectedHealth:   entities.HealthStatusDegraded,
 		},
 		{
 			name:             "Database timeout error",
 			pingError:        errors.New("timeout"),
-			expectedDBStatus: models.DatabaseStatusDisconnected,
-			expectedHealth:   models.HealthStatusDegraded,
+			expectedDBStatus: entities.DatabaseStatusDisconnected,
+			expectedHealth:   entities.HealthStatusDegraded,
 		},
 		{
 			name:             "Database network error",
 			pingError:        errors.New("network unreachable"),
-			expectedDBStatus: models.DatabaseStatusDisconnected,
-			expectedHealth:   models.HealthStatusDegraded,
+			expectedDBStatus: entities.DatabaseStatusDisconnected,
+			expectedHealth:   entities.HealthStatusDegraded,
 		},
 		{
 			name:             "Successful connection",
 			pingError:        nil,
-			expectedDBStatus: models.DatabaseStatusConnected,
-			expectedHealth:   models.HealthStatusHealthy,
+			expectedDBStatus: entities.DatabaseStatusConnected,
+			expectedHealth:   entities.HealthStatusHealthy,
 		},
 	}
 
@@ -63,7 +63,7 @@ func TestHealthServiceDatabaseConnectionTimeout(t *testing.T) {
 			// The actual database connectivity testing would require dependency injection
 
 			// Test the DetermineOverallHealth logic directly
-			overallHealth := models.DetermineOverallHealth(tt.expectedDBStatus)
+			overallHealth := dtos.DetermineOverallHealth(tt.expectedDBStatus)
 			assert.Equal(t, tt.expectedHealth, overallHealth)
 
 			// Test that the health service can handle various scenarios
@@ -87,34 +87,34 @@ func TestHealthServiceDatabaseConnectionTimeout(t *testing.T) {
 func TestHealthServiceInvalidDatabaseStates(t *testing.T) {
 	tests := []struct {
 		name           string
-		dbStatus       models.DatabaseStatus
-		expectedHealth models.HealthStatus
+		dbStatus       dtos.DatabaseStatus
+		expectedHealth dtos.HealthStatus
 	}{
 		{
 			name:           "Unknown database status should result in unhealthy",
 			dbStatus:       "unknown",
-			expectedHealth: models.HealthStatusUnhealthy,
+			expectedHealth: dtos.HealthStatusUnhealthy,
 		},
 		{
 			name:           "Empty database status should result in unhealthy",
 			dbStatus:       "",
-			expectedHealth: models.HealthStatusUnhealthy,
+			expectedHealth: dtos.HealthStatusUnhealthy,
 		},
 		{
 			name:           "Corrupted database status should result in unhealthy",
 			dbStatus:       "corrupted",
-			expectedHealth: models.HealthStatusUnhealthy,
+			expectedHealth: dtos.HealthStatusUnhealthy,
 		},
 		{
 			name:           "Malformed database status should result in unhealthy",
 			dbStatus:       "con nected",
-			expectedHealth: models.HealthStatusUnhealthy,
+			expectedHealth: dtos.HealthStatusUnhealthy,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := models.DetermineOverallHealth(tt.dbStatus)
+			result := dtos.DetermineOverallHealth(tt.dbStatus)
 			assert.Equal(t, tt.expectedHealth, result)
 		})
 	}
@@ -260,7 +260,7 @@ func TestHealthServiceMalformedRequests(t *testing.T) {
 	t.Run("Invalid health response validation", func(t *testing.T) {
 		healthService := services.NewHealthService()
 
-		invalidResponse := &models.HealthResponse{
+		invalidResponse := &dtos.HealthResponse{
 			Status:    "invalid_status",
 			Database:  "invalid_database",
 			Timestamp: "invalid_timestamp",
@@ -276,32 +276,32 @@ func TestHealthServiceMalformedRequests(t *testing.T) {
 	t.Run("Corrupted health response fields", func(t *testing.T) {
 		tests := []struct {
 			name     string
-			response models.HealthResponse
+			response dtos.HealthResponse
 			errorMsg string
 		}{
 			{
 				name: "Corrupted status field",
-				response: models.HealthResponse{
-					Status:    models.HealthStatus("héalthy"), // non-ASCII
-					Database:  models.DatabaseStatusConnected,
+				response: dtos.HealthResponse{
+					Status:    dtos.HealthStatus("héalthy"), // non-ASCII
+					Database:  dtos.DatabaseStatusConnected,
 					Timestamp: time.Now().UTC().Format(time.RFC3339),
 				},
 				errorMsg: "invalid status",
 			},
 			{
 				name: "Corrupted database field",
-				response: models.HealthResponse{
-					Status:    models.HealthStatusHealthy,
-					Database:  models.DatabaseStatus("connëcted"), // non-ASCII
+				response: dtos.HealthResponse{
+					Status:    dtos.HealthStatusHealthy,
+					Database:  dtos.DatabaseStatus("connëcted"), // non-ASCII
 					Timestamp: time.Now().UTC().Format(time.RFC3339),
 				},
 				errorMsg: "invalid database status",
 			},
 			{
 				name: "Malformed timestamp with injection attempt",
-				response: models.HealthResponse{
-					Status:    models.HealthStatusHealthy,
-					Database:  models.DatabaseStatusConnected,
+				response: dtos.HealthResponse{
+					Status:    dtos.HealthStatusHealthy,
+					Database:  dtos.DatabaseStatusConnected,
 					Timestamp: "2023-01-01T00:00:00Z'; DROP TABLE health; --",
 				},
 				errorMsg: "invalid timestamp format",
@@ -373,9 +373,9 @@ func TestHealthServiceEdgeCaseTimestamps(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response := models.HealthResponse{
-				Status:    models.HealthStatusHealthy,
-				Database:  models.DatabaseStatusConnected,
+			response := dtos.HealthResponse{
+				Status:    dtos.HealthStatusHealthy,
+				Database:  dtos.DatabaseStatusConnected,
 				Timestamp: tt.timestamp,
 			}
 
@@ -392,9 +392,9 @@ func TestHealthServiceEdgeCaseTimestamps(t *testing.T) {
 
 func TestHealthServiceBoundaryConditions(t *testing.T) {
 	t.Run("Maximum uptime value", func(t *testing.T) {
-		response := models.HealthResponse{
-			Status:    models.HealthStatusHealthy,
-			Database:  models.DatabaseStatusConnected,
+		response := dtos.HealthResponse{
+			Status:    dtos.HealthStatusHealthy,
+			Database:  dtos.DatabaseStatusConnected,
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 			Uptime:    9223372036854775807, // max int64
 		}
@@ -404,9 +404,9 @@ func TestHealthServiceBoundaryConditions(t *testing.T) {
 	})
 
 	t.Run("Minimum negative uptime", func(t *testing.T) {
-		response := models.HealthResponse{
-			Status:    models.HealthStatusHealthy,
-			Database:  models.DatabaseStatusConnected,
+		response := dtos.HealthResponse{
+			Status:    dtos.HealthStatusHealthy,
+			Database:  dtos.DatabaseStatusConnected,
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 			Uptime:    -9223372036854775808, // min int64
 		}
@@ -422,9 +422,9 @@ func TestHealthServiceBoundaryConditions(t *testing.T) {
 			longVersion = longVersion[:i] + "a" + longVersion[i+1:]
 		}
 
-		response := models.HealthResponse{
-			Status:    models.HealthStatusHealthy,
-			Database:  models.DatabaseStatusConnected,
+		response := dtos.HealthResponse{
+			Status:    dtos.HealthStatusHealthy,
+			Database:  dtos.DatabaseStatusConnected,
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 			Version:   longVersion,
 		}
@@ -436,9 +436,9 @@ func TestHealthServiceBoundaryConditions(t *testing.T) {
 	t.Run("Unicode characters in version", func(t *testing.T) {
 		unicodeVersion := "1.0.0-🚀.beta"
 
-		response := models.HealthResponse{
-			Status:    models.HealthStatusHealthy,
-			Database:  models.DatabaseStatusConnected,
+		response := dtos.HealthResponse{
+			Status:    dtos.HealthStatusHealthy,
+			Database:  dtos.DatabaseStatusConnected,
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 			Version:   unicodeVersion,
 		}
@@ -534,7 +534,7 @@ func TestHealthServiceConsistentBehavior(t *testing.T) {
 
 func TestErrorResponseValidation(t *testing.T) {
 	t.Run("Valid error response", func(t *testing.T) {
-		errorResp := models.NewErrorResponse("HEALTH_CHECK_FAILED", "Database connection timeout")
+		errorResp := dtos.NewErrorResponse("HEALTH_CHECK_FAILED", "Database connection timeout")
 
 		assert.NotNil(t, errorResp)
 		assert.Equal(t, "HEALTH_CHECK_FAILED", errorResp.Error)
@@ -542,7 +542,7 @@ func TestErrorResponseValidation(t *testing.T) {
 	})
 
 	t.Run("Error response with empty fields", func(t *testing.T) {
-		errorResp := models.NewErrorResponse("", "")
+		errorResp := dtos.NewErrorResponse("", "")
 
 		assert.NotNil(t, errorResp)
 		assert.Equal(t, "", errorResp.Error)
@@ -550,7 +550,7 @@ func TestErrorResponseValidation(t *testing.T) {
 	})
 
 	t.Run("Error response with special characters", func(t *testing.T) {
-		errorResp := models.NewErrorResponse("ERROR_CODE_123", "Connection failed: timeout after 30s (error: connection refused)")
+		errorResp := dtos.NewErrorResponse("ERROR_CODE_123", "Connection failed: timeout after 30s (error: connection refused)")
 
 		assert.NotNil(t, errorResp)
 		assert.Contains(t, errorResp.Message, "timeout")

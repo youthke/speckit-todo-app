@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"gorm.io/gorm"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 	"todo-app/internal/storage"
 )
 
@@ -23,7 +23,7 @@ func NewTaskService() *TaskService {
 }
 
 // CreateTask creates a new task
-func (s *TaskService) CreateTask(req models.CreateTaskRequest) (*models.Task, error) {
+func (s *TaskService) CreateTask(req dtos.CreateTaskRequest) (*dtos.Task, error) {
 	// Trim whitespace from title
 	title := strings.TrimSpace(req.Title)
 	if title == "" {
@@ -34,7 +34,7 @@ func (s *TaskService) CreateTask(req models.CreateTaskRequest) (*models.Task, er
 		return nil, errors.New("title must be 500 characters or less")
 	}
 
-	task := models.Task{
+	task := dtos.Task{
 		Title:     title,
 		Completed: false,
 	}
@@ -48,8 +48,8 @@ func (s *TaskService) CreateTask(req models.CreateTaskRequest) (*models.Task, er
 }
 
 // GetTasks retrieves tasks with optional filtering
-func (s *TaskService) GetTasks(completed *bool) ([]models.Task, error) {
-	var tasks []models.Task
+func (s *TaskService) GetTasks(completed *bool) ([]dtos.Task, error) {
+	var tasks []dtos.Task
 	query := s.db.Order("created_at DESC")
 
 	if completed != nil {
@@ -65,8 +65,8 @@ func (s *TaskService) GetTasks(completed *bool) ([]models.Task, error) {
 }
 
 // GetTaskByID retrieves a task by its ID
-func (s *TaskService) GetTaskByID(id uint) (*models.Task, error) {
-	var task models.Task
+func (s *TaskService) GetTaskByID(id uint) (*dtos.Task, error) {
+	var task dtos.Task
 	result := s.db.First(&task, id)
 
 	if result.Error != nil {
@@ -80,7 +80,7 @@ func (s *TaskService) GetTaskByID(id uint) (*models.Task, error) {
 }
 
 // UpdateTask updates an existing task
-func (s *TaskService) UpdateTask(id uint, req models.UpdateTaskRequest) (*models.Task, error) {
+func (s *TaskService) UpdateTask(id uint, req dtos.UpdateTaskRequest) (*dtos.Task, error) {
 	// First, get the existing task
 	task, err := s.GetTaskByID(id)
 	if err != nil {
@@ -129,7 +129,7 @@ func (s *TaskService) DeleteTask(id uint) error {
 	}
 
 	// Delete the task
-	result := s.db.Delete(&models.Task{}, id)
+	result := s.db.Delete(&dtos.Task{}, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete task: %w", result.Error)
 	}
@@ -140,7 +140,7 @@ func (s *TaskService) DeleteTask(id uint) error {
 // GetTaskCount returns the total number of tasks
 func (s *TaskService) GetTaskCount(completed *bool) (int64, error) {
 	var count int64
-	query := s.db.Model(&models.Task{})
+	query := s.db.Model(&dtos.Task{})
 
 	if completed != nil {
 		query = query.Where("completed = ?", *completed)

@@ -1,4 +1,4 @@
-package models
+package dtos
 
 import (
 	"time"
@@ -11,6 +11,7 @@ type Task struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
 	Title     string    `json:"title" gorm:"type:varchar(500);not null" validate:"required,max=500"`
 	Completed bool      `json:"completed" gorm:"default:false"`
+	UserID    uint      `json:"-" gorm:"not null;index"` // Not exposed in API, only for database
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }

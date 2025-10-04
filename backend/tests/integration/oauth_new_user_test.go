@@ -13,7 +13,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"todo-app/handlers"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 	"todo-app/services/auth"
 )
 

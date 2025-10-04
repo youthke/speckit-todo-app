@@ -3,10 +3,12 @@ package http
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
+	"domain/task/entities"
 	"todo-app/application/task"
 )
 
@@ -405,36 +407,71 @@ func (h *TaskHandlers) DeleteTask(c *gin.Context) {
 
 // convertTaskToResponse converts a domain task entity to HTTP response format
 func (h *TaskHandlers) convertTaskToResponse(taskEntity interface{}) TaskResponse {
-	// This would use proper type assertion in a real implementation
-	// For now, we'll assume the conversion logic
+	task, ok := taskEntity.(*entities.Task)
+	if !ok {
+		// Return empty response if type assertion fails
+		return TaskResponse{}
+	}
+
 	return TaskResponse{
-		// Conversion logic would be implemented here
-		// This is a placeholder
+		ID:          task.ID().Value(),
+		Title:       task.Title().Value(),
+		Description: task.Description().Value(),
+		Status:      task.Status().String(),
+		Priority:    task.Priority().String(),
+		UserID:      task.UserID().Value(),
+		CreatedAt:   task.CreatedAt(),
+		UpdatedAt:   task.UpdatedAt(),
 	}
 }
 
 // convertTasksToResponse converts multiple domain task entities to HTTP response format
 func (h *TaskHandlers) convertTasksToResponse(tasks interface{}) []TaskResponse {
-	// This would use proper type assertion and conversion in a real implementation
-	// For now, we'll return an empty slice
-	return []TaskResponse{}
+	taskList, ok := tasks.([]*entities.Task)
+	if !ok {
+		// Return empty slice if type assertion fails
+		return []TaskResponse{}
+	}
+
+	responses := make([]TaskResponse, 0, len(taskList))
+	for _, task := range taskList {
+		responses = append(responses, h.convertTaskToResponse(task))
+	}
+
+	return responses
 }
 
 // Error checking helper functions
 func isValidationError(err error) bool {
-	// Check if error is a domain validation error
-	// This would be implemented based on your error handling strategy
-	return false
+	if err == nil {
+		return false
+	}
+	// Check if error message contains validation-related keywords
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "validation") ||
+		strings.Contains(errMsg, "invalid") ||
+		strings.Contains(errMsg, "cannot be empty") ||
+		strings.Contains(errMsg, "must be") ||
+		strings.Contains(errMsg, "required")
 }
 
 func isNotFoundError(err error) bool {
-	// Check if error indicates resource not found
-	// This would be implemented based on your error handling strategy
-	return false
+	if err == nil {
+		return false
+	}
+	// Check if error message contains not found keywords
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "not found") ||
+		strings.Contains(errMsg, "does not exist")
 }
 
 func isAccessDeniedError(err error) bool {
-	// Check if error indicates access denied
-	// This would be implemented based on your error handling strategy
-	return false
+	if err == nil {
+		return false
+	}
+	// Check if error message contains access denied keywords
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "access denied") ||
+		strings.Contains(errMsg, "not authorized") ||
+		strings.Contains(errMsg, "not owned by")
 }

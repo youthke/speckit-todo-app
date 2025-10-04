@@ -10,7 +10,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 )
 
 // DatabaseConfig holds database configuration
@@ -69,7 +69,7 @@ func NewDatabaseConnection(config DatabaseConfig) (*gorm.DB, error) {
 // AutoMigrate runs database migrations for all models
 func AutoMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
-		&models.User{},
+		&dtos.User{},
 		&valueobjects.GoogleIdentity{},
 		&entities.AuthenticationSession{},
 		&entities.OAuthState{},

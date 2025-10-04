@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 	"todo-app/services/auth"
 )
 
@@ -205,7 +205,7 @@ func (h *AuthHandler) ValidateSession(c *gin.Context) {
 
 	// Return session and user information
 	var userResponse interface{}
-	if user, ok := result.User.(*models.User); ok {
+	if user, ok := result.User.(*dtos.User); ok {
 		userResponse = user.ToResponse()
 	} else {
 		userResponse = result.User

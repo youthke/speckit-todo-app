@@ -9,7 +9,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"todo-app/internal/models"
+	"domain/auth/entities"
 )
 
 func setupOAuthStateTestDB(t *testing.T) *gorm.DB {
@@ -17,7 +17,7 @@ func setupOAuthStateTestDB(t *testing.T) *gorm.DB {
 	require.NoError(t, err)
 
 	// Auto-migrate the OAuthState table
-	err = db.AutoMigrate(&models.OAuthState{})
+	err = db.AutoMigrate(&entities.OAuthState{})
 	require.NoError(t, err)
 
 	return db
@@ -26,13 +26,13 @@ func setupOAuthStateTestDB(t *testing.T) *gorm.DB {
 func TestOAuthState_Validation(t *testing.T) {
 	tests := []struct {
 		name        string
-		state       models.OAuthState
+		state       entities.OAuthState
 		shouldError bool
 		errorMsg    string
 	}{
 		{
 			name: "valid OAuth state",
-			state: models.OAuthState{
+			state: entities.OAuthState{
 				StateToken:    "abcdef1234567890abcdef1234567890abcdef12", // 40 chars
 				PKCEVerifier:  "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
 				RedirectURI:   "http://localhost:3000/dashboard",
@@ -42,7 +42,7 @@ func TestOAuthState_Validation(t *testing.T) {
 		},
 		{
 			name: "invalid - short state token",
-			state: models.OAuthState{
+			state: entities.OAuthState{
 				StateToken:    "short", // Too short
 				PKCEVerifier:  "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
 				RedirectURI:   "http://localhost:3000/dashboard",
@@ -53,7 +53,7 @@ func TestOAuthState_Validation(t *testing.T) {
 		},
 		{
 			name: "invalid - empty PKCE verifier",
-			state: models.OAuthState{
+			state: entities.OAuthState{
 				StateToken:    "abcdef1234567890abcdef1234567890abcdef12",
 				PKCEVerifier:  "", // Empty
 				RedirectURI:   "http://localhost:3000/dashboard",
@@ -64,7 +64,7 @@ func TestOAuthState_Validation(t *testing.T) {
 		},
 		{
 			name: "invalid - invalid redirect URI",
-			state: models.OAuthState{
+			state: entities.OAuthState{
 				StateToken:    "abcdef1234567890abcdef1234567890abcdef12",
 				PKCEVerifier:  "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
 				RedirectURI:   "not-a-valid-url", // Invalid URL
@@ -75,7 +75,7 @@ func TestOAuthState_Validation(t *testing.T) {
 		},
 		{
 			name: "invalid - redirect URI not whitelisted",
-			state: models.OAuthState{
+			state: entities.OAuthState{
 				StateToken:    "abcdef1234567890abcdef1234567890abcdef12",
 				PKCEVerifier:  "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
 				RedirectURI:   "http://malicious-site.com/steal-tokens", // Not whitelisted
@@ -86,7 +86,7 @@ func TestOAuthState_Validation(t *testing.T) {
 		},
 		{
 			name: "invalid - expired state",
-			state: models.OAuthState{
+			state: entities.OAuthState{
 				StateToken:    "abcdef1234567890abcdef1234567890abcdef12",
 				PKCEVerifier:  "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
 				RedirectURI:   "http://localhost:3000/dashboard",
@@ -97,7 +97,7 @@ func TestOAuthState_Validation(t *testing.T) {
 		},
 		{
 			name: "invalid - expires too far in future",
-			state: models.OAuthState{
+			state: entities.OAuthState{
 				StateToken:    "abcdef1234567890abcdef1234567890abcdef12",
 				PKCEVerifier:  "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
 				RedirectURI:   "http://localhost:3000/dashboard",
@@ -127,7 +127,7 @@ func TestOAuthState_Validation(t *testing.T) {
 func TestOAuthState_Create(t *testing.T) {
 	db := setupOAuthStateTestDB(t)
 
-	state := models.OAuthState{
+	state := entities.OAuthState{
 		StateToken:    "test_state_token_1234567890_abcdef_secure",
 		PKCEVerifier:  "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
 		RedirectURI:   "http://localhost:3000/dashboard",
@@ -144,7 +144,7 @@ func TestOAuthState_UniqueStateToken(t *testing.T) {
 	db := setupOAuthStateTestDB(t)
 
 	// Create first state
-	state1 := models.OAuthState{
+	state1 := entities.OAuthState{
 		StateToken:    "unique_state_token_abcdef1234567890_test",
 		PKCEVerifier:  "first_verifier_code_challenge_test_123",
 		RedirectURI:   "http://localhost:3000/dashboard",
@@ -155,7 +155,7 @@ func TestOAuthState_UniqueStateToken(t *testing.T) {
 	require.NoError(t, result.Error)
 
 	// Try to create state with same token
-	state2 := models.OAuthState{
+	state2 := entities.OAuthState{
 		StateToken:    "unique_state_token_abcdef1234567890_test", // Same token
 		PKCEVerifier:  "second_verifier_code_challenge_test_456",
 		RedirectURI:   "http://localhost:3000/auth/callback",
@@ -170,26 +170,26 @@ func TestOAuthState_UniqueStateToken(t *testing.T) {
 func TestOAuthState_IsExpired(t *testing.T) {
 	tests := []struct {
 		name     string
-		state    models.OAuthState
+		state    entities.OAuthState
 		expected bool
 	}{
 		{
 			name: "not expired state",
-			state: models.OAuthState{
+			state: entities.OAuthState{
 				ExpiresAt: time.Now().Add(2 * time.Minute),
 			},
 			expected: false,
 		},
 		{
 			name: "expired state",
-			state: models.OAuthState{
+			state: entities.OAuthState{
 				ExpiresAt: time.Now().Add(-1 * time.Minute),
 			},
 			expected: true,
 		},
 		{
 			name: "state expiring now",
-			state: models.OAuthState{
+			state: entities.OAuthState{
 				ExpiresAt: time.Now(),
 			},
 			expected: true,
@@ -205,7 +205,7 @@ func TestOAuthState_IsExpired(t *testing.T) {
 }
 
 func TestOAuthState_GenerateState(t *testing.T) {
-	state, err := models.GenerateOAuthState("http://localhost:3000/dashboard")
+	state, err := dtos.GenerateOAuthState("http://localhost:3000/dashboard")
 	require.NoError(t, err)
 
 	// Validate generated state
@@ -228,7 +228,7 @@ func TestOAuthState_GenerateState_InvalidRedirectURI(t *testing.T) {
 
 	for _, uri := range invalidURIs {
 		t.Run("invalid_uri_"+uri, func(t *testing.T) {
-			_, err := models.GenerateOAuthState(uri)
+			_, err := dtos.GenerateOAuthState(uri)
 			assert.Error(t, err)
 		})
 	}
@@ -279,15 +279,15 @@ func TestOAuthState_ValidateRedirectURI(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := models.ValidateRedirectURI(tt.uri)
+			result := dtos.ValidateRedirectURI(tt.uri)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
 
 func TestOAuthState_GeneratePKCEVerifier(t *testing.T) {
-	verifier1 := models.GeneratePKCEVerifier()
-	verifier2 := models.GeneratePKCEVerifier()
+	verifier1 := dtos.GeneratePKCEVerifier()
+	verifier2 := dtos.GeneratePKCEVerifier()
 
 	// Should be different each time
 	assert.NotEqual(t, verifier1, verifier2)
@@ -308,7 +308,7 @@ func TestOAuthState_CleanupExpired(t *testing.T) {
 	db := setupOAuthStateTestDB(t)
 
 	// Create expired state
-	expiredState := models.OAuthState{
+	expiredState := entities.OAuthState{
 		StateToken:    "expired_state_token_1234567890_old",
 		PKCEVerifier:  "expired_verifier_code",
 		RedirectURI:   "http://localhost:3000/dashboard",
@@ -318,7 +318,7 @@ func TestOAuthState_CleanupExpired(t *testing.T) {
 	require.NoError(t, result.Error)
 
 	// Create valid state
-	validState := models.OAuthState{
+	validState := entities.OAuthState{
 		StateToken:    "valid_state_token_1234567890_current",
 		PKCEVerifier:  "valid_verifier_code",
 		RedirectURI:   "http://localhost:3000/dashboard",
@@ -329,20 +329,20 @@ func TestOAuthState_CleanupExpired(t *testing.T) {
 
 	// Count before cleanup
 	var beforeCount int64
-	db.Model(&models.OAuthState{}).Count(&beforeCount)
+	db.Model(&entities.OAuthState{}).Count(&beforeCount)
 	assert.Equal(t, int64(2), beforeCount)
 
 	// Cleanup expired states
-	deletedCount := models.CleanupExpiredOAuthStates(db)
+	deletedCount := entities.CleanupExpiredOAuthStates(db)
 	assert.Equal(t, int64(1), deletedCount)
 
 	// Count after cleanup
 	var afterCount int64
-	db.Model(&models.OAuthState{}).Count(&afterCount)
+	db.Model(&entities.OAuthState{}).Count(&afterCount)
 	assert.Equal(t, int64(1), afterCount)
 
 	// Verify only valid state remains
-	var remainingState models.OAuthState
+	var remainingState entities.OAuthState
 	result = db.First(&remainingState)
 	require.NoError(t, result.Error)
 	assert.Equal(t, "valid_state_token_1234567890_current", remainingState.StateToken)

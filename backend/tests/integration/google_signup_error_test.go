@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"todo-app/internal/storage"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 )
 
 // TestGoogleSignup_OAuthDenied_ShowsError tests error handling when user denies OAuth

@@ -11,7 +11,7 @@ import (
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 	"todo-app/internal/config"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 )
 
 // GoogleUserInfo contains user information from Google OAuth
@@ -87,7 +87,7 @@ func (s *GoogleOAuthService) ExchangeCode(ctx context.Context, code string) (*Go
 }
 
 // CreateUserFromGoogle creates a new user and GoogleIdentity from Google OAuth info
-func (s *GoogleOAuthService) CreateUserFromGoogle(info *GoogleUserInfo) (*models.User, error) {
+func (s *GoogleOAuthService) CreateUserFromGoogle(info *GoogleUserInfo) (*dtos.User, error) {
 	// Validate email is verified
 	if !info.EmailVerified {
 		return nil, errors.New("email not verified")
@@ -102,7 +102,7 @@ func (s *GoogleOAuthService) CreateUserFromGoogle(info *GoogleUserInfo) (*models
 	}()
 
 	// Create user
-	user := models.User{
+	user := dtos.User{
 		Email:      info.Email,
 		Name:       info.Name,
 		AuthMethod: "google",
@@ -136,7 +136,7 @@ func (s *GoogleOAuthService) CreateUserFromGoogle(info *GoogleUserInfo) (*models
 }
 
 // FindUserByGoogleID checks if a user with the given Google ID already exists
-func (s *GoogleOAuthService) FindUserByGoogleID(googleUserID string) (*models.User, error) {
+func (s *GoogleOAuthService) FindUserByGoogleID(googleUserID string) (*dtos.User, error) {
 	var googleIdentity valueobjects.GoogleIdentity
 	if err := s.db.Where("google_user_id = ?", googleUserID).First(&googleIdentity).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -146,7 +146,7 @@ func (s *GoogleOAuthService) FindUserByGoogleID(googleUserID string) (*models.Us
 	}
 
 	// Load the associated user
-	var user models.User
+	var user dtos.User
 	if err := s.db.First(&user, googleIdentity.UserID).Error; err != nil {
 		return nil, fmt.Errorf("failed to load user: %w", err)
 	}
