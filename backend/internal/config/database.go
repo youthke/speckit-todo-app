@@ -5,10 +5,11 @@ import (
 	"os"
 	"time"
 
+	"domain/auth/entities"
+	"domain/auth/valueobjects"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"domain/auth/entities"
 	"todo-app/internal/models"
 )
 
@@ -69,7 +70,7 @@ func NewDatabaseConnection(config DatabaseConfig) (*gorm.DB, error) {
 func AutoMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&models.User{},
-		&models.GoogleIdentity{},
+		&valueobjects.GoogleIdentity{},
 		&entities.AuthenticationSession{},
 		&entities.OAuthState{},
 	)

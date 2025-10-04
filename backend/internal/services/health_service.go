@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"todo-app/internal/models"
+	"domain/health/entities"
 	"todo-app/internal/storage"
 )
 
@@ -24,18 +24,18 @@ func NewHealthService() *HealthService {
 }
 
 // GetHealthStatus performs comprehensive health checks and returns the current status
-func (hs *HealthService) GetHealthStatus() (*models.HealthResponse, error) {
+func (hs *HealthService) GetHealthStatus() (*entities.HealthResponse, error) {
 	// Check database connectivity
 	dbStatus := hs.checkDatabaseConnectivity()
 
 	// Determine overall health based on database status
-	overallHealth := models.DetermineOverallHealth(dbStatus)
+	overallHealth := entities.DetermineOverallHealth(dbStatus)
 
 	// Calculate uptime
 	uptime := int64(time.Since(hs.startTime).Seconds())
 
 	// Create health response
-	response := models.NewHealthResponse(
+	response := entities.NewHealthResponse(
 		overallHealth,
 		dbStatus,
 		hs.version,
@@ -52,34 +52,34 @@ func (hs *HealthService) GetHealthStatus() (*models.HealthResponse, error) {
 }
 
 // checkDatabaseConnectivity tests the database connection and returns status
-func (hs *HealthService) checkDatabaseConnectivity() models.DatabaseStatus {
+func (hs *HealthService) checkDatabaseConnectivity() entities.DatabaseStatus {
 	// Get the database instance
 	db := storage.GetDB()
 	if db == nil {
 		log.Printf("Database instance is nil")
-		return models.DatabaseStatusDisconnected
+		return entities.DatabaseStatusDisconnected
 	}
 
 	// Get underlying sql.DB to test connection
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Printf("Failed to get underlying database connection: %v", err)
-		return models.DatabaseStatusError
+		return entities.DatabaseStatusError
 	}
 
 	// Test connection with ping
 	if err := sqlDB.Ping(); err != nil {
 		log.Printf("Database ping failed: %v", err)
-		return models.DatabaseStatusDisconnected
+		return entities.DatabaseStatusDisconnected
 	}
 
 	// Additional checks for database health
 	if err := hs.performDatabaseHealthChecks(sqlDB); err != nil {
 		log.Printf("Database health check failed: %v", err)
-		return models.DatabaseStatusError
+		return entities.DatabaseStatusError
 	}
 
-	return models.DatabaseStatusConnected
+	return entities.DatabaseStatusConnected
 }
 
 // performDatabaseHealthChecks performs additional database health validations
@@ -100,15 +100,15 @@ func (hs *HealthService) performDatabaseHealthChecks(sqlDB interface{}) error {
 }
 
 // GetDatabaseStatus returns just the database connectivity status
-func (hs *HealthService) GetDatabaseStatus() models.DatabaseStatus {
+func (hs *HealthService) GetDatabaseStatus() entities.DatabaseStatus {
 	return hs.checkDatabaseConnectivity()
 }
 
 // IsHealthy returns whether the service is currently healthy
 func (hs *HealthService) IsHealthy() bool {
 	dbStatus := hs.checkDatabaseConnectivity()
-	overallHealth := models.DetermineOverallHealth(dbStatus)
-	return overallHealth == models.HealthStatusHealthy
+	overallHealth := entities.DetermineOverallHealth(dbStatus)
+	return overallHealth == entities.HealthStatusHealthy
 }
 
 // GetUptime returns the service uptime in seconds
@@ -127,7 +127,7 @@ func (hs *HealthService) SetVersion(version string) {
 }
 
 // ValidateHealthResponse validates a health response structure
-func (hs *HealthService) ValidateHealthResponse(response *models.HealthResponse) error {
+func (hs *HealthService) ValidateHealthResponse(response *entities.HealthResponse) error {
 	if response == nil {
 		return fmt.Errorf("health response cannot be nil")
 	}
