@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 )
 
 // UserService handles user-related operations
@@ -21,8 +21,8 @@ func NewUserService(db *gorm.DB) *UserService {
 }
 
 // GetUserByID retrieves a user by ID
-func (s *UserService) GetUserByID(userID uint) (*models.User, error) {
-	var user models.User
+func (s *UserService) GetUserByID(userID uint) (*dtos.User, error) {
+	var user dtos.User
 
 	result := s.db.Where("id = ?", userID).First(&user)
 	if result.Error != nil {
@@ -33,8 +33,8 @@ func (s *UserService) GetUserByID(userID uint) (*models.User, error) {
 }
 
 // GetUserByEmail retrieves a user by email
-func (s *UserService) GetUserByEmail(email string) (*models.User, error) {
-	var user models.User
+func (s *UserService) GetUserByEmail(email string) (*dtos.User, error) {
+	var user dtos.User
 
 	result := s.db.Where("email = ?", email).First(&user)
 	if result.Error != nil {
@@ -45,8 +45,8 @@ func (s *UserService) GetUserByEmail(email string) (*models.User, error) {
 }
 
 // GetUserByGoogleID retrieves a user by Google ID
-func (s *UserService) GetUserByGoogleID(googleID string) (*models.User, error) {
-	var user models.User
+func (s *UserService) GetUserByGoogleID(googleID string) (*dtos.User, error) {
+	var user dtos.User
 
 	result := s.db.Where("google_id = ?", googleID).First(&user)
 	if result.Error != nil {
@@ -57,9 +57,9 @@ func (s *UserService) GetUserByGoogleID(googleID string) (*models.User, error) {
 }
 
 // CreateOAuthUser creates a new user from OAuth information
-func (s *UserService) CreateOAuthUser(email, name, googleID string) (*models.User, error) {
+func (s *UserService) CreateOAuthUser(email, name, googleID string) (*dtos.User, error) {
 	now := time.Now()
-	user := models.User{
+	user := dtos.User{
 		Email:          email,
 		Name:           name,
 		GoogleID:       googleID,
@@ -76,8 +76,8 @@ func (s *UserService) CreateOAuthUser(email, name, googleID string) (*models.Use
 }
 
 // LinkGoogleAccount links a Google account to an existing user
-func (s *UserService) LinkGoogleAccount(userID uint, googleID string) (*models.User, error) {
-	var user models.User
+func (s *UserService) LinkGoogleAccount(userID uint, googleID string) (*dtos.User, error) {
+	var user dtos.User
 
 	// Find the user
 	result := s.db.Where("id = ?", userID).First(&user)
@@ -91,7 +91,7 @@ func (s *UserService) LinkGoogleAccount(userID uint, googleID string) (*models.U
 	}
 
 	// Check if this Google ID is already used by another user
-	var existingUser models.User
+	var existingUser dtos.User
 	result = s.db.Where("google_id = ?", googleID).First(&existingUser)
 	if result.Error == nil {
 		return nil, errors.New("this Google account is already linked to another user")
@@ -115,8 +115,8 @@ func (s *UserService) LinkGoogleAccount(userID uint, googleID string) (*models.U
 }
 
 // UnlinkGoogleAccount removes Google OAuth linking from a user
-func (s *UserService) UnlinkGoogleAccount(userID uint) (*models.User, error) {
-	var user models.User
+func (s *UserService) UnlinkGoogleAccount(userID uint) (*dtos.User, error) {
+	var user dtos.User
 
 	// Find the user
 	result := s.db.Where("id = ?", userID).First(&user)
@@ -144,8 +144,8 @@ func (s *UserService) UnlinkGoogleAccount(userID uint) (*models.User, error) {
 
 // FindOrCreateOAuthUser finds an existing user or creates a new one from OAuth data
 // This implements automatic account linking based on email
-func (s *UserService) FindOrCreateOAuthUser(email, name, googleID string) (*models.User, bool, error) {
-	var user models.User
+func (s *UserService) FindOrCreateOAuthUser(email, name, googleID string) (*dtos.User, bool, error) {
+	var user dtos.User
 	isNewUser := false
 
 	// Try to find user by Google ID
@@ -192,8 +192,8 @@ func (s *UserService) FindOrCreateOAuthUser(email, name, googleID string) (*mode
 }
 
 // UpdateUserProfile updates a user's profile information
-func (s *UserService) UpdateUserProfile(userID uint, name string) (*models.User, error) {
-	var user models.User
+func (s *UserService) UpdateUserProfile(userID uint, name string) (*dtos.User, error) {
+	var user dtos.User
 
 	// Find the user
 	result := s.db.Where("id = ?", userID).First(&user)
@@ -215,8 +215,8 @@ func (s *UserService) UpdateUserProfile(userID uint, name string) (*models.User,
 }
 
 // DeactivateUser deactivates a user account
-func (s *UserService) DeactivateUser(userID uint) (*models.User, error) {
-	var user models.User
+func (s *UserService) DeactivateUser(userID uint) (*dtos.User, error) {
+	var user dtos.User
 
 	// Find the user
 	result := s.db.Where("id = ?", userID).First(&user)
@@ -236,8 +236,8 @@ func (s *UserService) DeactivateUser(userID uint) (*models.User, error) {
 }
 
 // ActivateUser activates a user account
-func (s *UserService) ActivateUser(userID uint) (*models.User, error) {
-	var user models.User
+func (s *UserService) ActivateUser(userID uint) (*dtos.User, error) {
+	var user dtos.User
 
 	// Find the user
 	result := s.db.Where("id = ?", userID).First(&user)
@@ -257,12 +257,12 @@ func (s *UserService) ActivateUser(userID uint) (*models.User, error) {
 }
 
 // ListUsers retrieves a list of users with pagination
-func (s *UserService) ListUsers(limit, offset int) ([]models.User, int64, error) {
-	var users []models.User
+func (s *UserService) ListUsers(limit, offset int) ([]dtos.User, int64, error) {
+	var users []dtos.User
 	var total int64
 
 	// Get total count
-	if err := s.db.Model(&models.User{}).Count(&total).Error; err != nil {
+	if err := s.db.Model(&dtos.User{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -276,8 +276,8 @@ func (s *UserService) ListUsers(limit, offset int) ([]models.User, int64, error)
 }
 
 // SearchUsersByEmail searches for users by email pattern
-func (s *UserService) SearchUsersByEmail(emailPattern string) ([]models.User, error) {
-	var users []models.User
+func (s *UserService) SearchUsersByEmail(emailPattern string) ([]dtos.User, error) {
+	var users []dtos.User
 
 	result := s.db.Where("email LIKE ?", "%"+emailPattern+"%").
 		Order("email").
@@ -292,8 +292,8 @@ func (s *UserService) SearchUsersByEmail(emailPattern string) ([]models.User, er
 }
 
 // GetOAuthUsers retrieves all users who signed up via OAuth
-func (s *UserService) GetOAuthUsers() ([]models.User, error) {
-	var users []models.User
+func (s *UserService) GetOAuthUsers() ([]dtos.User, error) {
+	var users []dtos.User
 
 	result := s.db.Where("google_id IS NOT NULL AND google_id != ''").
 		Order("oauth_created_at DESC").
@@ -307,8 +307,8 @@ func (s *UserService) GetOAuthUsers() ([]models.User, error) {
 }
 
 // GetLinkedUsers retrieves all users who have both password and OAuth authentication
-func (s *UserService) GetLinkedUsers() ([]models.User, error) {
-	var users []models.User
+func (s *UserService) GetLinkedUsers() ([]dtos.User, error) {
+	var users []dtos.User
 
 	result := s.db.Where("google_id IS NOT NULL AND google_id != '' AND password_hash IS NOT NULL AND password_hash != ''").
 		Order("created_at DESC").

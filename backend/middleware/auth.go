@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 	"todo-app/services/auth"
 )
 
@@ -62,7 +62,7 @@ func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 		c.Set("session", result.Session)
 
 		// Extract user ID from interface
-		if user, ok := result.User.(*models.User); ok {
+		if user, ok := result.User.(*dtos.User); ok {
 			c.Set("user_id", user.ID)
 		}
 		c.Set("session_id", result.Session.ID)
@@ -85,7 +85,7 @@ func (m *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 				c.Set("session", result.Session)
 
 				// Extract user ID from interface
-				if user, ok := result.User.(*models.User); ok {
+				if user, ok := result.User.(*dtos.User); ok {
 					c.Set("user_id", user.ID)
 				}
 				c.Set("session_id", result.Session.ID)
@@ -147,7 +147,7 @@ func (m *AuthMiddleware) RequireOAuth() gin.HandlerFunc {
 		c.Set("session", result.Session)
 
 		// Extract user ID from interface
-		if user, ok := result.User.(*models.User); ok {
+		if user, ok := result.User.(*dtos.User); ok {
 			c.Set("user_id", user.ID)
 		}
 		c.Set("session_id", result.Session.ID)
@@ -190,7 +190,7 @@ func (m *AuthMiddleware) RefreshIfNeeded() gin.HandlerFunc {
 		c.Set("session", result.Session)
 
 		// Extract user ID from interface
-		if user, ok := result.User.(*models.User); ok {
+		if user, ok := result.User.(*dtos.User); ok {
 			c.Set("user_id", user.ID)
 		}
 		c.Set("session_id", result.Session.ID)

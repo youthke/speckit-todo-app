@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 )
 
 // TestAuthMe_GoogleUser tests that /api/auth/me returns correct data for Google OAuth user

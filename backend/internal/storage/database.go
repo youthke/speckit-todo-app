@@ -8,7 +8,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 )
 
 var DB *gorm.DB
@@ -39,7 +39,7 @@ func InitDatabase() error {
 	}
 
 	// Run auto migrations
-	err = DB.AutoMigrate(&models.Task{})
+	err = DB.AutoMigrate(&dtos.Task{})
 	if err != nil {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
@@ -74,13 +74,13 @@ func ResetDatabase() error {
 	}
 
 	// Drop existing tables
-	err := DB.Migrator().DropTable(&models.Task{})
+	err := DB.Migrator().DropTable(&dtos.Task{})
 	if err != nil {
 		return fmt.Errorf("failed to drop tables: %w", err)
 	}
 
 	// Recreate tables
-	err = DB.AutoMigrate(&models.Task{})
+	err = DB.AutoMigrate(&dtos.Task{})
 	if err != nil {
 		return fmt.Errorf("failed to recreate tables: %w", err)
 	}

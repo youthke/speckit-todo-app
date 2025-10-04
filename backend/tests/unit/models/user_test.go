@@ -9,7 +9,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 )
 
 func setupTestDB(t *testing.T) *gorm.DB {

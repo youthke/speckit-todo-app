@@ -3,11 +3,11 @@ package user
 import (
 	"errors"
 
-	"todo-app/domain/user/entities"
-	"todo-app/domain/user/repositories"
-	"todo-app/domain/user/services"
-	"todo-app/domain/user/valueobjects"
-	taskvo "todo-app/domain/task/valueobjects"
+	"domain/user/entities"
+	"domain/user/repositories"
+	"domain/user/services"
+	"domain/user/valueobjects"
+	taskvo "domain/task/valueobjects"
 )
 
 // RegisterUserCommand represents a command to register a new user
@@ -108,10 +108,7 @@ func (s *userApplicationService) RegisterUser(cmd RegisterUserCommand) (*entitie
 	}
 
 	// Generate user ID (will be set by repository)
-	userID, err := valueobjects.NewUserID(0) // Repository will assign actual ID
-	if err != nil {
-		return nil, err
-	}
+	userID := valueobjects.NewUserID(0) // Repository will assign actual ID
 
 	// Create user entity
 	user, err := entities.NewUser(userID, email, profile, preferences)
@@ -158,10 +155,7 @@ func (s *userApplicationService) createUserPreferences(cmd RegisterUserCommand) 
 
 // GetUserProfile retrieves a user's complete profile
 func (s *userApplicationService) GetUserProfile(userID uint) (*entities.User, error) {
-	userIDVO, err := valueobjects.NewUserID(userID)
-	if err != nil {
-		return nil, err
-	}
+	userIDVO := valueobjects.NewUserID(userID)
 
 	user, err := s.userRepo.FindByID(userIDVO)
 	if err != nil {
@@ -177,10 +171,7 @@ func (s *userApplicationService) GetUserProfile(userID uint) (*entities.User, er
 
 // UpdateUserProfile updates user profile information with validation
 func (s *userApplicationService) UpdateUserProfile(cmd UpdateUserProfileCommand) (*entities.User, error) {
-	userIDVO, err := valueobjects.NewUserID(cmd.UserID)
-	if err != nil {
-		return nil, err
-	}
+	userIDVO := valueobjects.NewUserID(cmd.UserID)
 
 	// Retrieve current user
 	user, err := s.userRepo.FindByID(userIDVO)
@@ -210,10 +201,7 @@ func (s *userApplicationService) UpdateUserProfile(cmd UpdateUserProfileCommand)
 
 // GetUserPreferences retrieves user preferences
 func (s *userApplicationService) GetUserPreferences(userID uint) (valueobjects.UserPreferences, error) {
-	userIDVO, err := valueobjects.NewUserID(userID)
-	if err != nil {
-		return valueobjects.UserPreferences{}, err
-	}
+	userIDVO := valueobjects.NewUserID(userID)
 
 	user, err := s.userRepo.FindByID(userIDVO)
 	if err != nil {
@@ -229,10 +217,7 @@ func (s *userApplicationService) GetUserPreferences(userID uint) (valueobjects.U
 
 // UpdateUserPreferences updates user preferences
 func (s *userApplicationService) UpdateUserPreferences(cmd UpdateUserPreferencesCommand) (valueobjects.UserPreferences, error) {
-	userIDVO, err := valueobjects.NewUserID(cmd.UserID)
-	if err != nil {
-		return valueobjects.UserPreferences{}, err
-	}
+	userIDVO := valueobjects.NewUserID(cmd.UserID)
 
 	// Retrieve current user
 	user, err := s.userRepo.FindByID(userIDVO)
@@ -309,10 +294,7 @@ func (s *userApplicationService) GetUserByEmail(email string) (*entities.User, e
 
 // ChangeUserEmail changes a user's email address with validation
 func (s *userApplicationService) ChangeUserEmail(userID uint, newEmail string) (*entities.User, error) {
-	userIDVO, err := valueobjects.NewUserID(userID)
-	if err != nil {
-		return nil, err
-	}
+	userIDVO := valueobjects.NewUserID(userID)
 
 	emailVO, err := valueobjects.NewEmail(newEmail)
 	if err != nil {

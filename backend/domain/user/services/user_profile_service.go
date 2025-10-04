@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"domain/user/entities"
 	"domain/user/repositories"
 	"domain/user/valueobjects"
 )

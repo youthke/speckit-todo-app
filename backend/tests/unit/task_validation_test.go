@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 )
 
 func TestTaskValidation(t *testing.T) {

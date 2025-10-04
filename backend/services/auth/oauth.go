@@ -8,7 +8,7 @@ import (
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 	"domain/auth/entities"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 )
 
 // OAuthService handles OAuth flow operations
@@ -53,7 +53,7 @@ func (s *OAuthService) InitiateOAuthFlow(ctx context.Context, redirectURI string
 
 // OAuthCallbackResult represents the result of processing OAuth callback
 type OAuthCallbackResult struct {
-	User        *models.User                   `json:"user"`
+	User        *dtos.User                   `json:"user"`
 	Session     *entities.AuthenticationSession `json:"session"`
 	RedirectURI string                          `json:"redirect_uri"`
 	IsNewUser   bool                            `json:"is_new_user"`
@@ -104,8 +104,8 @@ func (s *OAuthService) ProcessOAuthCallback(ctx context.Context, code, state str
 }
 
 // findOrCreateUser finds an existing user or creates a new one from Google user info
-func (s *OAuthService) findOrCreateUser(userInfo *GoogleUserInfo) (*models.User, bool, error) {
-	var user models.User
+func (s *OAuthService) findOrCreateUser(userInfo *GoogleUserInfo) (*dtos.User, bool, error) {
+	var user dtos.User
 	isNewUser := false
 
 	// Try to find user by Google ID
@@ -143,7 +143,7 @@ func (s *OAuthService) findOrCreateUser(userInfo *GoogleUserInfo) (*models.User,
 
 	// Create new user
 	now := time.Now()
-	newUser := models.User{
+	newUser := dtos.User{
 		Email:          userInfo.Email,
 		Name:           userInfo.Name,
 		GoogleID:       userInfo.ID,

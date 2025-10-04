@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"todo-app/internal/services"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 )
 
 func TestTaskServiceEdgeCases(t *testing.T) {
@@ -16,19 +16,19 @@ func TestTaskServiceEdgeCases(t *testing.T) {
 		service := services.NewTaskService()
 
 		// Test empty title
-		req := models.CreateTaskRequest{Title: ""}
+		req := dtos.CreateTaskRequest{Title: ""}
 		_, err := service.CreateTask(req)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "title cannot be empty")
 
 		// Test whitespace-only title
-		req = models.CreateTaskRequest{Title: "   "}
+		req = dtos.CreateTaskRequest{Title: "   "}
 		_, err = service.CreateTask(req)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "title cannot be empty")
 
 		// Test tab and newline only
-		req = models.CreateTaskRequest{Title: "\t\n\r "}
+		req = dtos.CreateTaskRequest{Title: "\t\n\r "}
 		_, err = service.CreateTask(req)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "title cannot be empty")
@@ -42,7 +42,7 @@ func TestTaskServiceEdgeCases(t *testing.T) {
 		for i := range longTitle {
 			longTitle = string(append([]rune(longTitle)[:i], 'a'))
 		}
-		req := models.CreateTaskRequest{Title: string(make([]byte, 500))}
+		req := dtos.CreateTaskRequest{Title: string(make([]byte, 500))}
 
 		// This would fail due to no database, but validation should pass
 		_, err := service.CreateTask(req)
@@ -50,7 +50,7 @@ func TestTaskServiceEdgeCases(t *testing.T) {
 		assert.NotContains(t, err.Error(), "title must be 500 characters or less")
 
 		// Test 501 characters (should fail validation)
-		req = models.CreateTaskRequest{Title: string(make([]byte, 501))}
+		req = dtos.CreateTaskRequest{Title: string(make([]byte, 501))}
 		_, err = service.CreateTask(req)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "title must be 500 characters or less")
@@ -60,13 +60,13 @@ func TestTaskServiceEdgeCases(t *testing.T) {
 		service := services.NewTaskService()
 
 		// Test empty title update
-		updateReq := models.UpdateTaskRequest{Title: stringPtr("")}
+		updateReq := dtos.UpdateTaskRequest{Title: stringPtr("")}
 		_, err := service.UpdateTask(1, updateReq)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "title cannot be empty")
 
 		// Test whitespace-only title update
-		updateReq = models.UpdateTaskRequest{Title: stringPtr("   ")}
+		updateReq = dtos.UpdateTaskRequest{Title: stringPtr("   ")}
 		_, err = service.UpdateTask(1, updateReq)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "title cannot be empty")
@@ -76,7 +76,7 @@ func TestTaskServiceEdgeCases(t *testing.T) {
 		service := services.NewTaskService()
 
 		// Test 501 characters update (should fail validation)
-		updateReq := models.UpdateTaskRequest{Title: stringPtr(string(make([]byte, 501)))}
+		updateReq := dtos.UpdateTaskRequest{Title: stringPtr(string(make([]byte, 501)))}
 		_, err := service.UpdateTask(1, updateReq)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "title must be 500 characters or less")
@@ -96,7 +96,7 @@ func TestTaskServiceEdgeCases(t *testing.T) {
 		}
 
 		for _, title := range specialTitles {
-			req := models.CreateTaskRequest{Title: title}
+			req := dtos.CreateTaskRequest{Title: title}
 			_, err := service.CreateTask(req)
 			// We expect database error, not validation error
 			if err != nil {
@@ -110,20 +110,20 @@ func TestTaskServiceEdgeCases(t *testing.T) {
 		service := services.NewTaskService()
 
 		// Test update with nil title and completion
-		updateReq := models.UpdateTaskRequest{}
+		updateReq := dtos.UpdateTaskRequest{}
 		_, err := service.UpdateTask(1, updateReq)
 		// Should get "task not found" error, not validation error
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "task not found")
 
 		// Test update with only completion
-		updateReq = models.UpdateTaskRequest{Completed: boolPtr(true)}
+		updateReq = dtos.UpdateTaskRequest{Completed: boolPtr(true)}
 		_, err = service.UpdateTask(1, updateReq)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "task not found")
 
 		// Test update with only title
-		updateReq = models.UpdateTaskRequest{Title: stringPtr("Valid title")}
+		updateReq = dtos.UpdateTaskRequest{Title: stringPtr("Valid title")}
 		_, err = service.UpdateTask(1, updateReq)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "task not found")
@@ -138,7 +138,7 @@ func TestTaskServiceEdgeCases(t *testing.T) {
 		assert.Contains(t, err.Error(), "task not found")
 
 		// Test updating non-existent task
-		updateReq := models.UpdateTaskRequest{Title: stringPtr("Updated")}
+		updateReq := dtos.UpdateTaskRequest{Title: stringPtr("Updated")}
 		_, err = service.UpdateTask(999, updateReq)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "task not found")
@@ -164,7 +164,7 @@ func TestTaskServiceEdgeCases(t *testing.T) {
 		titleLengths := []int{1, 499, 500}
 		for _, length := range titleLengths {
 			title := string(make([]byte, length))
-			req := models.CreateTaskRequest{Title: title}
+			req := dtos.CreateTaskRequest{Title: title}
 			_, err := service.CreateTask(req)
 			// These should pass validation (though fail on DB)
 			if err != nil {

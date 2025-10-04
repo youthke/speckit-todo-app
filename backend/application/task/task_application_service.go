@@ -3,11 +3,11 @@ package task
 import (
 	"errors"
 
-	"todo-app/domain/task/entities"
-	"todo-app/domain/task/repositories"
-	"todo-app/domain/task/services"
-	"todo-app/domain/task/valueobjects"
-	uservo "todo-app/domain/user/valueobjects"
+	"domain/task/entities"
+	"domain/task/repositories"
+	"domain/task/services"
+	"domain/task/valueobjects"
+	uservo "domain/user/valueobjects"
 )
 
 // CreateTaskCommand represents a command to create a new task
@@ -97,10 +97,7 @@ func (s *taskApplicationService) CreateTask(cmd CreateTaskCommand) (*entities.Ta
 		return nil, err
 	}
 
-	userID, err := uservo.NewUserID(cmd.UserID)
-	if err != nil {
-		return nil, err
-	}
+	userID := uservo.NewUserID(cmd.UserID)
 
 	// Validate task creation
 	if err := s.validationService.ValidateTaskCreation(title, userID); err != nil {
@@ -111,10 +108,7 @@ func (s *taskApplicationService) CreateTask(cmd CreateTaskCommand) (*entities.Ta
 	status := valueobjects.NewPendingStatus()
 
 	// Generate new task ID (in real implementation, this would come from repository)
-	taskID, err := valueobjects.NewTaskID(0) // Repository will assign actual ID
-	if err != nil {
-		return nil, err
-	}
+	taskID := valueobjects.NewTaskID(0) // Repository will assign actual ID
 
 	// Create the task entity
 	task, err := entities.NewTask(taskID, title, description, status, priority, userID)
@@ -133,15 +127,9 @@ func (s *taskApplicationService) CreateTask(cmd CreateTaskCommand) (*entities.Ta
 // UpdateTask updates an existing task with validation
 func (s *taskApplicationService) UpdateTask(cmd UpdateTaskCommand) (*entities.Task, error) {
 	// Create task ID value object
-	taskID, err := valueobjects.NewTaskID(cmd.TaskID)
-	if err != nil {
-		return nil, err
-	}
+	taskID := valueobjects.NewTaskID(cmd.TaskID)
 
-	userID, err := uservo.NewUserID(cmd.UserID)
-	if err != nil {
-		return nil, err
-	}
+	userID := uservo.NewUserID(cmd.UserID)
 
 	// Retrieve the existing task
 	task, err := s.taskRepo.FindByID(taskID)
@@ -239,15 +227,9 @@ func (s *taskApplicationService) UpdateTask(cmd UpdateTaskCommand) (*entities.Ta
 
 // GetTask retrieves a specific task with ownership validation
 func (s *taskApplicationService) GetTask(taskID uint, userID uint) (*entities.Task, error) {
-	taskIDVO, err := valueobjects.NewTaskID(taskID)
-	if err != nil {
-		return nil, err
-	}
+	taskIDVO := valueobjects.NewTaskID(taskID)
 
-	userIDVO, err := uservo.NewUserID(userID)
-	if err != nil {
-		return nil, err
-	}
+	userIDVO := uservo.NewUserID(userID)
 
 	task, err := s.taskRepo.FindByID(taskIDVO)
 	if err != nil {
@@ -268,10 +250,7 @@ func (s *taskApplicationService) GetTask(taskID uint, userID uint) (*entities.Ta
 
 // GetUserTasks retrieves tasks for a user with optional filtering
 func (s *taskApplicationService) GetUserTasks(query TaskQuery) ([]*entities.Task, error) {
-	userID, err := uservo.NewUserID(query.UserID)
-	if err != nil {
-		return nil, err
-	}
+	userID := uservo.NewUserID(query.UserID)
 
 	// If status filter is provided
 	if query.Status != nil {
@@ -297,15 +276,9 @@ func (s *taskApplicationService) GetUserTasks(query TaskQuery) ([]*entities.Task
 
 // DeleteTask deletes a task with ownership validation
 func (s *taskApplicationService) DeleteTask(taskID uint, userID uint) error {
-	taskIDVO, err := valueobjects.NewTaskID(taskID)
-	if err != nil {
-		return err
-	}
+	taskIDVO := valueobjects.NewTaskID(taskID)
 
-	userIDVO, err := uservo.NewUserID(userID)
-	if err != nil {
-		return err
-	}
+	userIDVO := uservo.NewUserID(userID)
 
 	// Retrieve task to check ownership
 	task, err := s.taskRepo.FindByID(taskIDVO)

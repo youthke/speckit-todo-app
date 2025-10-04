@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 	"todo-app/services/auth"
 )
 

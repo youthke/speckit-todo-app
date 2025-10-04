@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"todo-app/internal/storage"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 )
 
 // TestGoogleSignup_NewUser_Success tests the complete OAuth flow for a new user

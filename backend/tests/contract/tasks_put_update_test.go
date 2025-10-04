@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPutTaskContract(t *testing.T) {
+func TestPutTaskUpdateContract(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 

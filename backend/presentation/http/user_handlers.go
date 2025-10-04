@@ -2,10 +2,13 @@ package http
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
+	"domain/user/entities"
+	"domain/user/valueobjects"
 	"todo-app/application/user"
 )
 
@@ -373,27 +376,53 @@ func (h *UserHandlers) UpdateUserPreferences(c *gin.Context) {
 
 // convertUserToResponse converts a domain user entity to HTTP response format
 func (h *UserHandlers) convertUserToResponse(userEntity interface{}) UserResponse {
-	// This would use proper type assertion in a real implementation
-	// For now, we'll assume the conversion logic
+	user, ok := userEntity.(*entities.User)
+	if !ok {
+		// Return empty response if type assertion fails
+		return UserResponse{}
+	}
+
 	return UserResponse{
-		// Conversion logic would be implemented here
-		// This is a placeholder
+		ID:    user.ID().Value(),
+		Email: user.Email().Value(),
+		Profile: UserProfileResponse{
+			FirstName: user.Profile().FirstName(),
+			LastName:  user.Profile().LastName(),
+			Timezone:  user.Profile().Timezone(),
+		},
+		Preferences: UserPreferencesResponse{
+			DefaultTaskPriority: user.Preferences().DefaultTaskPriority(),
+			EmailNotifications:  user.Preferences().EmailNotifications(),
+			ThemePreference:     user.Preferences().ThemePreference(),
+		},
+		CreatedAt: user.CreatedAt(),
+		UpdatedAt: user.UpdatedAt(),
 	}
 }
 
 // convertPreferencesToResponse converts user preferences to HTTP response format
 func (h *UserHandlers) convertPreferencesToResponse(preferences interface{}) UserPreferencesResponse {
-	// This would use proper type assertion in a real implementation
-	// For now, we'll assume the conversion logic
+	prefs, ok := preferences.(valueobjects.UserPreferences)
+	if !ok {
+		// Return empty response if type assertion fails
+		return UserPreferencesResponse{}
+	}
+
 	return UserPreferencesResponse{
-		// Conversion logic would be implemented here
-		// This is a placeholder
+		DefaultTaskPriority: prefs.DefaultTaskPriority(),
+		EmailNotifications:  prefs.EmailNotifications(),
+		ThemePreference:     prefs.ThemePreference(),
 	}
 }
 
 // Error checking helper functions specific to user operations
 func isEmailConflictError(err error) bool {
+	if err == nil {
+		return false
+	}
 	// Check if error indicates email conflict (already exists)
-	// This would be implemented based on your error handling strategy
-	return false
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "email already exists") ||
+		strings.Contains(errMsg, "duplicate") ||
+		strings.Contains(errMsg, "unique constraint")
 }

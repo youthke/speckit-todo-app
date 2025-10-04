@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 	"todo-app/internal/services"
 	"todo-app/internal/storage"
 )

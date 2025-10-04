@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 	"todo-app/internal/services"
 )
 
@@ -58,7 +58,7 @@ func (h *TaskHandler) GetTasks(c *gin.Context) {
 	}
 
 	// Return response
-	c.JSON(http.StatusOK, models.TaskResponse{
+	c.JSON(http.StatusOK, dtos.TaskResponse{
 		Tasks: tasks,
 		Count: int(count),
 	})
@@ -99,7 +99,7 @@ func (h *TaskHandler) GetTask(c *gin.Context) {
 
 // CreateTask handles POST /api/v1/tasks
 func (h *TaskHandler) CreateTask(c *gin.Context) {
-	var req models.CreateTaskRequest
+	var req dtos.CreateTaskRequest
 
 	// Bind JSON request
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -143,7 +143,7 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 		return
 	}
 
-	var req models.UpdateTaskRequest
+	var req dtos.UpdateTaskRequest
 
 	// Bind JSON request
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 	"todo-app/internal/services"
 )
 
@@ -109,7 +109,7 @@ func (h *GoogleOAuthHandler) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	var user *models.User
+	var user *dtos.User
 	// If user already exists, auto-login (create new session)
 	if existingUser != nil {
 		log.Printf("User already exists with Google ID: %s, auto-logging in", userInfo.GoogleUserID)

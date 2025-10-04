@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"todo-app/internal/config"
-	"todo-app/internal/models"
+	"todo-app/internal/dtos"
 	"todo-app/internal/storage"
 )
 
