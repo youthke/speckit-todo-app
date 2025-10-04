@@ -1,9 +1,9 @@
 package repositories
 
 import (
-	"todo-app/domain/task/entities"
-	"todo-app/domain/task/valueobjects"
-	uservo "todo-app/domain/user/valueobjects"
+	"domain/task/entities"
+	"domain/task/valueobjects"
+	uservo "domain/user/valueobjects"
 )
 
 // TaskRepository defines the interface for task persistence

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"todo-app/domain/user/valueobjects"
+	"domain/user/valueobjects"
 )
 
 // User represents a domain entity for user management

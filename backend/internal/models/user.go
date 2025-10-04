@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"domain/auth/valueobjects"
 	"gorm.io/gorm"
 )
 
@@ -30,7 +31,7 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 
 	// Relationship to GoogleIdentity (new approach)
-	GoogleIdentity *GoogleIdentity `json:"google_identity,omitempty" gorm:"foreignKey:UserID"`
+	GoogleIdentity *valueobjects.GoogleIdentity `json:"google_identity,omitempty" gorm:"foreignKey:UserID"`
 }
 
 // TableName specifies the table name for the User model

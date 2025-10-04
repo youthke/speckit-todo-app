@@ -3,8 +3,8 @@ package services
 import (
 	"errors"
 
-	"todo-app/domain/task/valueobjects"
-	uservo "todo-app/domain/user/valueobjects"
+	"domain/task/valueobjects"
+	uservo "domain/user/valueobjects"
 )
 
 // TaskValidationService provides domain validation logic for tasks

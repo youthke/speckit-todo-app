@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"todo-app/domain/user/repositories"
-	"todo-app/domain/user/valueobjects"
+	"domain/user/repositories"
+	"domain/user/valueobjects"
 )
 
 // UserCredentials represents user authentication credentials

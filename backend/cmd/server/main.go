@@ -6,11 +6,11 @@ import (
 	"os"
 	"time"
 
+	"domain/health/entities"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"golang.org/x/time/rate"
 	"todo-app/internal/handlers"
-	"todo-app/internal/models"
 	"todo-app/internal/services"
 	"todo-app/internal/storage"
 	"todo-app/middleware"
@@ -95,7 +95,7 @@ func setupRoutes(router *gin.Engine, taskHandler *handlers.TaskHandler, healthSe
 		healthResponse, err := healthService.GetHealthStatus()
 		if err != nil {
 			log.Printf("Health check failed: %v", err)
-			errorResponse := models.NewErrorResponse("internal_error", "Health check failed unexpectedly")
+			errorResponse := entities.NewErrorResponse("internal_error", "Health check failed unexpectedly")
 			c.JSON(http.StatusInternalServerError, errorResponse)
 			return
 		}
@@ -103,11 +103,11 @@ func setupRoutes(router *gin.Engine, taskHandler *handlers.TaskHandler, healthSe
 		// Determine HTTP status code based on health status
 		var statusCode int
 		switch healthResponse.Status {
-		case models.HealthStatusHealthy:
+		case entities.HealthStatusHealthy:
 			statusCode = http.StatusOK
-		case models.HealthStatusDegraded:
+		case entities.HealthStatusDegraded:
 			statusCode = http.StatusServiceUnavailable
-		case models.HealthStatusUnhealthy:
+		case entities.HealthStatusUnhealthy:
 			statusCode = http.StatusServiceUnavailable
 		default:
 			statusCode = http.StatusInternalServerError

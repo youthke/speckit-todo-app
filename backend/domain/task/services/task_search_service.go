@@ -1,10 +1,10 @@
 package services
 
 import (
-	"todo-app/domain/task/entities"
-	"todo-app/domain/task/repositories"
-	"todo-app/domain/task/valueobjects"
-	uservo "todo-app/domain/user/valueobjects"
+	"domain/task/entities"
+	"domain/task/repositories"
+	"domain/task/valueobjects"
+	uservo "domain/user/valueobjects"
 )
 
 // TaskSearchService provides domain search logic for tasks

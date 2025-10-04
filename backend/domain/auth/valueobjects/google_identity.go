@@ -1,7 +1,9 @@
-package models
+package valueobjects
 
 import (
 	"time"
+
+	userentities "domain/user/entities"
 )
 
 // GoogleIdentity represents the link between a User and their Google account
@@ -15,7 +17,7 @@ type GoogleIdentity struct {
 	UpdatedAt      time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 
 	// Relationship
-	User           User      `json:"-" gorm:"foreignKey:UserID"`
+	User           userentities.User      `json:"-" gorm:"foreignKey:UserID"`
 }
 
 // TableName specifies the table name for the GoogleIdentity model

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	"domain/auth/valueobjects"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 	"todo-app/internal/config"
@@ -114,7 +115,7 @@ func (s *GoogleOAuthService) CreateUserFromGoogle(info *GoogleUserInfo) (*models
 	}
 
 	// Create Google identity link
-	googleIdentity := models.GoogleIdentity{
+	googleIdentity := valueobjects.GoogleIdentity{
 		UserID:        user.ID,
 		GoogleUserID:  info.GoogleUserID,
 		Email:         info.Email,
@@ -136,7 +137,7 @@ func (s *GoogleOAuthService) CreateUserFromGoogle(info *GoogleUserInfo) (*models
 
 // FindUserByGoogleID checks if a user with the given Google ID already exists
 func (s *GoogleOAuthService) FindUserByGoogleID(googleUserID string) (*models.User, error) {
-	var googleIdentity models.GoogleIdentity
+	var googleIdentity valueobjects.GoogleIdentity
 	if err := s.db.Where("google_user_id = ?", googleUserID).First(&googleIdentity).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // No user found, not an error

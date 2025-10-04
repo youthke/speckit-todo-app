@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"todo-app/internal/models"
+	"domain/auth/entities"
 )
 
 // SessionCleanupJob handles cleanup of expired authentication sessions
@@ -63,7 +63,7 @@ func (j *SessionCleanupJob) cleanup(ctx context.Context) {
 	// Delete expired sessions
 	result := j.db.WithContext(ctx).
 		Where("session_expires_at < ?", time.Now()).
-		Delete(&models.AuthenticationSession{})
+		Delete(&entities.AuthenticationSession{})
 
 	if result.Error != nil {
 		log.Printf("Error cleaning up expired sessions: %v", result.Error)
@@ -86,7 +86,7 @@ func (j *SessionCleanupJob) cleanupInactiveSessions(ctx context.Context) {
 
 	result := j.db.WithContext(ctx).
 		Where("last_activity < ?", inactivityThreshold).
-		Delete(&models.AuthenticationSession{})
+		Delete(&entities.AuthenticationSession{})
 
 	if result.Error != nil {
 		log.Printf("Error cleaning up inactive sessions: %v", result.Error)
@@ -114,14 +114,14 @@ func (j *SessionCleanupJob) GetStats(ctx context.Context) (map[string]interface{
 
 	// Count total sessions
 	if err := j.db.WithContext(ctx).
-		Model(&models.AuthenticationSession{}).
+		Model(&entities.AuthenticationSession{}).
 		Count(&totalCount).Error; err != nil {
 		return nil, err
 	}
 
 	// Count expired sessions
 	if err := j.db.WithContext(ctx).
-		Model(&models.AuthenticationSession{}).
+		Model(&entities.AuthenticationSession{}).
 		Where("session_expires_at < ?", time.Now()).
 		Count(&expiredCount).Error; err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func (j *SessionCleanupJob) GetStats(ctx context.Context) (map[string]interface{
 
 	// Count active sessions
 	if err := j.db.WithContext(ctx).
-		Model(&models.AuthenticationSession{}).
+		Model(&entities.AuthenticationSession{}).
 		Where("session_expires_at >= ?", time.Now()).
 		Count(&activeCount).Error; err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func (j *SessionCleanupJob) GetStats(ctx context.Context) (map[string]interface{
 
 	// Count OAuth sessions
 	if err := j.db.WithContext(ctx).
-		Model(&models.AuthenticationSession{}).
+		Model(&entities.AuthenticationSession{}).
 		Where("access_token IS NOT NULL").
 		Count(&oauthCount).Error; err != nil {
 		return nil, err
@@ -154,7 +154,7 @@ func (j *SessionCleanupJob) GetStats(ctx context.Context) (map[string]interface{
 // CleanupSessionsByUserID removes all sessions for a specific user
 func CleanupSessionsByUserID(db *gorm.DB, userID uint) error {
 	result := db.Where("user_id = ?", userID).
-		Delete(&models.AuthenticationSession{})
+		Delete(&entities.AuthenticationSession{})
 
 	if result.Error != nil {
 		return result.Error
@@ -172,7 +172,7 @@ func CleanupSessionsOlderThan(db *gorm.DB, duration time.Duration) error {
 	cutoffTime := time.Now().Add(-duration)
 
 	result := db.Where("created_at < ?", cutoffTime).
-		Delete(&models.AuthenticationSession{})
+		Delete(&entities.AuthenticationSession{})
 
 	if result.Error != nil {
 		return result.Error

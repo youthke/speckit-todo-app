@@ -1,8 +1,8 @@
 package repositories
 
 import (
-	"todo-app/domain/user/entities"
-	"todo-app/domain/user/valueobjects"
+	"domain/user/entities"
+	"domain/user/valueobjects"
 )
 
 // UserRepository defines the interface for user persistence
